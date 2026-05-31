@@ -286,7 +286,7 @@ function Badge({ label, bg, text, dot }) {
 
 function KpiCard({ icon, label, value, sub, accent }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 16, padding: "20px 24px", boxShadow: "0 2px 12px rgba(0,0,0,.06)", borderTop: `3px solid ${accent}`, flex: 1, minWidth: 150 }}>
+    <div style={{ background: "#fff", borderRadius: 22, padding: "22px 24px", boxShadow: "0 18px 45px rgba(15,23,42,.08)", border: "1px solid rgba(226,232,240,.9)", borderTop: `4px solid ${accent}`, flex: 1, minWidth: 150 }}>
       <div style={{ fontSize: 26 }}>{icon}</div>
       <div style={{ fontSize: 28, fontWeight: 900, color: "#0f172a" }}>{value}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color: "#64748b" }}>{label}</div>
@@ -316,8 +316,8 @@ function LoginScreen() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#0f172a,#1e3a5f)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Segoe UI, system-ui, sans-serif", padding: 20 }}>
-      <form onSubmit={login} style={{ width: "min(420px,100%)", background: "#fff", borderRadius: 22, padding: 30, boxShadow: "0 30px 80px rgba(0,0,0,.25)" }}>
+    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at top left,#6366f1 0,#0f172a 36%,#020617 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Segoe UI, system-ui, sans-serif", padding: 20 }}>
+      <form onSubmit={login} style={{ width: "min(420px,100%)", background: "rgba(255,255,255,.95)", borderRadius: 28, padding: 32, boxShadow: "0 30px 90px rgba(0,0,0,.30)", border: "1px solid rgba(255,255,255,.45)", backdropFilter: "blur(18px)" }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ width: 54, height: 54, borderRadius: 16, background: "linear-gradient(135deg,#6366f1,#818cf8)", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>✈</div>
           <h1 style={{ margin: "14px 0 4px", color: "#0f172a", fontSize: 24 }}>Transport Manager</h1>
@@ -408,7 +408,7 @@ function Modal({ mode, type, record, onClose, onSave }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)", padding: 12 }}>
-      <div style={{ background: "#fff", borderRadius: 20, width: "min(95vw,760px)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 64px rgba(0,0,0,.18)" }}>
+      <div style={{ background: "#fff", borderRadius: 26, width: "min(95vw,820px)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 30px 90px rgba(15,23,42,.28)", border: "1px solid rgba(226,232,240,.9)" }}>
         <div style={{ padding: "24px 28px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, color: isImport ? "#6366f1" : "#f59e0b", letterSpacing: 1 }}>{isImport ? "IMPORT" : "EXPORT"}</div>
@@ -451,7 +451,7 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete }) {
   const allowed = canModify(role, type);
   const cols = ["Semaine", "Entité", isImport ? "Fournisseur" : "Client", "Transport", "Tracking", "Exp.", "Prévue", "Livraison", "Retard", "Statut", "Douane", "Actions"];
   return (
-    <div style={{ overflowX: "auto", borderRadius: 14, border: "1px solid #e2e8f0", background: "#fff" }}>
+    <div style={{ overflowX: "auto", borderRadius: 22, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 16px 36px rgba(15,23,42,.06)" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
           <tr style={{ background: isImport ? "#eef2ff" : "#fffbeb" }}>
@@ -651,7 +651,7 @@ export default function App() {
   if (!user) return <LoginScreen />;
 
   const tabStyle = (t) => ({
-    padding: "10px 18px", border: "none", background: activeTab === t ? "#fff" : "transparent", fontWeight: activeTab === t ? 800 : 600, color: activeTab === t ? "#0f172a" : "#64748b", cursor: "pointer", borderRadius: 10, fontSize: 13, boxShadow: activeTab === t ? "0 2px 8px rgba(0,0,0,.08)" : "none", whiteSpace: "nowrap"
+    padding: "10px 18px", border: "none", background: activeTab === t ? "linear-gradient(135deg,#ffffff,#eef2ff)" : "transparent", fontWeight: activeTab === t ? 900 : 700, color: activeTab === t ? "#1e1b4b" : "#64748b", cursor: "pointer", borderRadius: 999, fontSize: 13, border: activeTab === t ? "1px solid #c7d2fe" : "1px solid transparent", boxShadow: activeTab === t ? "0 8px 20px rgba(99,102,241,.16)" : "none", whiteSpace: "nowrap"
   });
 
   const filterBar = (
@@ -664,8 +664,8 @@ export default function App() {
   );
 
   return (
-    <div style={{ fontFamily: "Segoe UI, system-ui, sans-serif", background: "#f1f5f9", minHeight: "100vh", color: "#0f172a" }}>
-      <div style={{ background: "linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 70, boxShadow: "0 4px 20px rgba(0,0,0,.2)", gap: 16, flexWrap: "wrap" }}>
+    <div style={{ fontFamily: "Segoe UI, system-ui, sans-serif", background: "linear-gradient(135deg,#f8fafc 0%,#eef2ff 45%,#f8fafc 100%)", minHeight: "100vh", color: "#0f172a" }}>
+      <div style={{ background: "linear-gradient(135deg,#020617 0%,#172554 52%,#312e81 100%)", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 76, boxShadow: "0 14px 40px rgba(15,23,42,.25)", gap: 16, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg,#6366f1,#818cf8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>✈</div>
           <div>
@@ -682,17 +682,28 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ background: "#e2e8f0", padding: "0 32px" }}>
+      <div style={{ background: "rgba(255,255,255,.72)", padding: "0 32px", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(226,232,240,.9)", position: "sticky", top: 76, zIndex: 40 }}>
         <div style={{ display: "flex", gap: 4, padding: "8px 0", overflowX: "auto" }}>
           {[["dashboard", "📊 Dashboard"], ["imports", `📥 Imports (${imports.length})`], ["exports", `📤 Exports (${exports.length})`], ["graphiques", "📈 Graphiques"], ["alertes", `🚨 Alertes (${kpis.retardes + kpis.douaneBloque})`], ["historique", `🕒 Historique (${history.length})`]].map(([t, l]) => <button key={t} onClick={() => setActiveTab(t)} style={tabStyle(t)}>{l}</button>)}
         </div>
       </div>
 
-      <div style={{ padding: "28px 32px" }}>
+      <div style={{ padding: "30px 32px" }}>
         {role === "viewer" && createRoleDocHelp}
 
         {activeTab === "dashboard" && (
           <>
+            <div style={{ ...panelStyle, marginBottom: 24, background: "linear-gradient(135deg,#ffffff 0%,#eef2ff 100%)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "#6366f1", letterSpacing: 1, textTransform: "uppercase" }}>Logistics Control Center</div>
+                <h2 style={{ margin: "6px 0 4px", fontSize: 26, color: "#0f172a" }}>Bonjour, {user.email}</h2>
+                <div style={{ color: "#64748b", fontSize: 13 }}>Suivi import/export en temps réel · PDF reports · Audit log · Firebase cloud</div>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ ...pillStyle, background: "#eef2ff", color: "#4338ca" }}>Role: {role}</span>
+                <span style={{ ...pillStyle, background: "#dcfce7", color: "#15803d" }}>Online</span>
+              </div>
+            </div>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
               <KpiCard icon="📦" label="Total Shipments" value={kpis.total} sub={`${kpis.imports} imports · ${kpis.exports} exports`} accent="#6366f1" />
               <KpiCard icon="✅" label="Livrés" value={kpis.livres} sub={kpis.total ? `${Math.round((kpis.livres / kpis.total) * 100)}% du total` : "-"} accent="#22c55e" />
@@ -766,15 +777,16 @@ export default function App() {
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
-const inputStyle = { padding: "9px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 13, background: "#fff", outline: "none", color: "#0f172a", fontFamily: "inherit" };
+const inputStyle = { padding: "9px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 13, background: "#fff", outline: "none", color: "#0f172a", fontFamily: "inherit" , boxShadow: "0 1px 2px rgba(15,23,42,.04)" };
 const loginInputStyle = { ...inputStyle, width: "100%", boxSizing: "border-box", marginBottom: 12 };
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 800, color: "#475569", marginBottom: 5 };
 const td = { padding: "11px 14px", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle" };
-const primaryBtn = { padding: "10px 22px", borderRadius: 10, border: "none", color: "#fff", cursor: "pointer", fontWeight: 800, fontSize: 14 };
-const secondaryBtn = { padding: "9px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#fff", cursor: "pointer", fontWeight: 700, color: "#64748b" };
+const primaryBtn = { padding: "10px 22px", borderRadius: 999, border: "none", color: "#fff", cursor: "pointer", fontWeight: 900, fontSize: 14, boxShadow: "0 10px 22px rgba(15,23,42,.12)" };
+const secondaryBtn = { padding: "9px 14px", borderRadius: 999, border: "1.5px solid #e2e8f0", background: "#fff", cursor: "pointer", fontWeight: 800, color: "#64748b", boxShadow: "0 6px 16px rgba(15,23,42,.06)" };
 const closeBtn = { background: "#f1f5f9", border: "none", borderRadius: 8, width: 36, height: 36, cursor: "pointer", fontSize: 18 };
-const headerBtn = { color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 800, fontSize: 13 };
-const panelStyle = { background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 12px rgba(0,0,0,.06)" };
+const headerBtn = { color: "#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 999, padding: "9px 15px", cursor: "pointer", fontWeight: 900, fontSize: 13, boxShadow: "0 10px 24px rgba(0,0,0,.18)" };
+const panelStyle = { background: "rgba(255,255,255,.92)", borderRadius: 24, padding: 24, boxShadow: "0 18px 45px rgba(15,23,42,.08)", border: "1px solid rgba(226,232,240,.95)", backdropFilter: "blur(10px)" };
+const pillStyle = { display: "inline-flex", alignItems: "center", padding: "8px 12px", borderRadius: 999, fontSize: 12, fontWeight: 900 };
 const codeBox = { display: "block", background: "#f1f5f9", padding: 12, borderRadius: 10, marginBottom: 10 };
 const centerPage = { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Segoe UI, system-ui, sans-serif" };
 const actionBtn = (bg, col, disabled) => ({ background: disabled ? "#e5e7eb" : bg, border: "none", color: disabled ? "#9ca3af" : col, borderRadius: 7, padding: "5px 9px", cursor: disabled ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 800, marginRight: 4 });
