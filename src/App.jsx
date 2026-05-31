@@ -111,15 +111,55 @@ function canModify(role, type) {
   return false;
 }
 
-async function addHistory(user, action, direction, id, label, detail = "") {
+const AUDIT_FIELDS = [
+  "semaine",
+  "entite",
+  "fournisseur",
+  "approvisionneur",
+  "client",
+  "chargeAffaire",
+  "typeTransport",
+  "transporteur",
+  "tracking",
+  "dateDemande",
+  "dateEnlevement",
+  "dateExpedition",
+  "datePrevue",
+  "dateLivraison",
+  "statut",
+  "typeMarchandise",
+  "priorite",
+  "retard",
+  "statutDouane",
+  "observations",
+];
+
+function cleanShipment(form) {
+  const { firebaseId, createdAt, updatedAt, ...clean } = form;
+  return clean;
+}
+
+function getChanges(before = {}, after = {}) {
+  return AUDIT_FIELDS
+    .filter((field) => String(before[field] ?? "") !== String(after[field] ?? ""))
+    .map((field) => ({
+      field,
+      before: String(before[field] ?? ""),
+      after: String(after[field] ?? ""),
+    }));
+}
+
+async function addHistory(user, action, direction, id, label, detail = "", changes = []) {
   await addDoc(collection(db, "history"), {
     action,
     direction,
     id,
     label,
     detail,
+    changes,
     ts: now(),
     userEmail: user?.email || "unknown",
+    userUid: user?.uid || "unknown",
     createdAt: serverTimestamp(),
   });
 }
@@ -432,15 +472,36 @@ export default function App() {
     if (!canModify(role, type)) return alert("You do not have permission for this action.");
     const collectionName = type === "import" ? "imports" : "exports";
     const direction = type === "import" ? "Import" : "Export";
-    const payload = { ...form, updatedBy: user.email, updatedAt: serverTimestamp() };
+    const cleanForm = cleanShipment(form);
+    const payload = { ...cleanForm, updatedBy: user.email, updatedAt: serverTimestamp() };
 
     if (modal.mode === "add") {
       const newId = makeId(type);
       await setDoc(doc(db, collectionName, newId), { ...payload, id: newId, createdBy: user.email, createdAt: serverTimestamp() });
-      await addHistory(user, "Ajout", direction, newId, `${form.entite} · ${form.fournisseur || form.client || ""}`);
+      await addHistory(
+        user,
+        "Ajout",
+        direction,
+        newId,
+        `${form.entite} · ${form.fournisseur || form.client || ""}`,
+        "Nouveau shipment créé",
+        getChanges({}, { ...cleanForm, id: newId })
+      );
     } else {
+      const currentRows = type === "import" ? imports : exports;
+      const before = currentRows.find((r) => r.id === form.id || r.firebaseId === form.firebaseId) || {};
+      const changes = getChanges(before, cleanForm);
+
       await updateDoc(doc(db, collectionName, form.firebaseId || form.id), payload);
-      await addHistory(user, "Modification", direction, form.id, `${form.entite} · ${form.fournisseur || form.client || ""}`, `Statut: ${form.statut}`);
+      await addHistory(
+        user,
+        "Modification",
+        direction,
+        form.id,
+        `${form.entite} · ${form.fournisseur || form.client || ""}`,
+        changes.length ? `${changes.length} champ(s) modifié(s)` : "Aucun changement détecté",
+        changes
+      );
     }
     setModal(null);
   };
@@ -449,8 +510,18 @@ export default function App() {
     if (!canModify(role, type)) return alert("You do not have permission for this action.");
     if (!window.confirm("Supprimer ce shipment ?")) return;
     const collectionName = type === "import" ? "imports" : "exports";
+    const rows = type === "import" ? imports : exports;
+    const deleted = rows.find((r) => r.id === id || r.firebaseId === id) || {};
     await deleteDoc(doc(db, collectionName, id));
-    await addHistory(user, "Suppression", type === "import" ? "Import" : "Export", id, "Shipment supprimé");
+    await addHistory(
+      user,
+      "Suppression",
+      type === "import" ? "Import" : "Export",
+      id,
+      `${deleted.entite || ""} · ${deleted.fournisseur || deleted.client || ""}`,
+      `Shipment supprimé · Tracking: ${deleted.tracking || "N/A"}`,
+      getChanges(deleted, {})
+    );
   };
 
   const createRoleDocHelp = (
@@ -537,11 +608,39 @@ export default function App() {
 
         {activeTab === "historique" && (
           <div style={panelStyle}>
-            <h3>🕒 Historique</h3>
+            <h3>🕒 Audit Log</h3>
+            <p style={{ color: "#64748b", marginTop: -8 }}>Tracks who changed shipments, when, and exactly what fields changed.</p>
             {[...history].sort((a, b) => String(b.ts).localeCompare(String(a.ts))).map((h) => (
-              <div key={h.firebaseId} style={{ padding: 12, background: "#f8fafc", borderRadius: 12, marginBottom: 10 }}>
-                <b>{h.action}</b> [{h.direction}] {h.id} — {h.label}
-                <div style={{ fontSize: 12, color: "#64748b" }}>{h.ts} · {h.userEmail}</div>
+              <div key={h.firebaseId} style={{ padding: 14, background: "#f8fafc", borderRadius: 12, marginBottom: 12, borderLeft: `4px solid ${h.action === "Ajout" ? "#22c55e" : h.action === "Suppression" ? "#ef4444" : "#3b82f6"}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div><b>{h.action}</b> [{h.direction}] {h.id} — {h.label}</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>{h.ts}</div>
+                </div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>User: {h.userEmail}</div>
+                {h.detail && <div style={{ fontSize: 12, color: "#475569", marginTop: 6 }}>{h.detail}</div>}
+                {Array.isArray(h.changes) && h.changes.length > 0 && (
+                  <div style={{ marginTop: 10, overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: "#e2e8f0" }}>
+                          <th style={{ textAlign: "left", padding: 8 }}>Field</th>
+                          <th style={{ textAlign: "left", padding: 8 }}>Before</th>
+                          <th style={{ textAlign: "left", padding: 8 }}>After</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {h.changes.slice(0, 8).map((c, i) => (
+                          <tr key={`${c.field}-${i}`}>
+                            <td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", fontWeight: 700 }}>{c.field}</td>
+                            <td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", color: "#ef4444" }}>{c.before || "—"}</td>
+                            <td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", color: "#16a34a" }}>{c.after || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {h.changes.length > 8 && <div style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}>+{h.changes.length - 8} more changes</div>}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -566,3 +665,4 @@ const panelStyle = { background: "#fff", borderRadius: 16, padding: 24, boxShado
 const codeBox = { display: "block", background: "#f1f5f9", padding: 12, borderRadius: 10, marginBottom: 10 };
 const centerPage = { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Segoe UI, system-ui, sans-serif" };
 const actionBtn = (bg, col, disabled) => ({ background: disabled ? "#e5e7eb" : bg, border: "none", color: disabled ? "#9ca3af" : col, borderRadius: 7, padding: "5px 9px", cursor: disabled ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 800, marginRight: 4 });
+const STATUS_COLORS = { "En attente": { background: "#fef3c7", color: "#b45309" }, "Livré": { background: "#d1fae5", color: "#16a34a" }, "Annulé": { background: "#fee2e2", color: "#dc2626" }, "Bloqué douane": { background: "#e0e7ff", color: "#4f46e5" } };
