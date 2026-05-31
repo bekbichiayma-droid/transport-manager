@@ -30,6 +30,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  setPersistence,
+  browserSessionPersistence,
 } from "firebase/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -304,6 +306,7 @@ function LoginScreen() {
     setError("");
     setLoading(true);
     try {
+      await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (err) {
       setError("Email or password incorrect, or the user does not exist in Firebase Authentication.");
