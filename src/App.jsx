@@ -52,7 +52,8 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // ─── Master Data ─────────────────────────────────────────────────────────────
-const STATUTS = ["En attente", "En transit", "Expédié", "Livré", "Bloqué", "Annulé"];
+const TIMELINE_STEPS = ["Créé", "Prêt à expédier", "Expédié", "Douane", "Livré"];
+const STATUTS = [...TIMELINE_STEPS, "Bloqué", "Annulé"];
 const TRANSPORTS = ["AERIEN", "Routier", "Maritime", "Express"];
 const PRIORITES = ["Normale", "Haute", "Urgente"];
 const DOUANE = ["N/A", "En cours", "Dédouané", "Bloqué douane"];
@@ -68,12 +69,16 @@ const TRANSPORTEURS = ["Chronopost", "Dachser", "DHL", "FedEx", "UPS", "Autre"];
 const MARCHANDISES = ["Pièces méca", "Composants", "Outillage", "Structures", "Pièces finies", "Sous-ensembles", "Autre"];
 
 const STATUS_COLORS = {
-  "Livré": { bg: "#dcfce7", text: "#15803d", dot: "#16a34a" },
-  "En transit": { bg: "#fef9c3", text: "#854d0e", dot: "#eab308" },
+  "Créé": { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8" },
+  "Prêt à expédier": { bg: "#e0f2fe", text: "#0369a1", dot: "#0284c7" },
   "Expédié": { bg: "#dbeafe", text: "#1d4ed8", dot: "#3b82f6" },
-  "En attente": { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8" },
+  "Douane": { bg: "#f3e8ff", text: "#7e22ce", dot: "#9333ea" },
+  "Livré": { bg: "#dcfce7", text: "#15803d", dot: "#16a34a" },
   "Bloqué": { bg: "#fee2e2", text: "#dc2626", dot: "#b91c1c" },
   "Annulé": { bg: "#f3f4f6", text: "#6b7280", dot: "#9ca3af" },
+  // Compatibility with old records
+  "En attente": { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8" },
+  "En transit": { bg: "#fef9c3", text: "#854d0e", dot: "#eab308" },
 };
 const CHART_PALETTE = ["#1e3a5f", "#16a34a", "#b45309", "#b91c1c", "#475569", "#0284c7"];
 const TRANSPORT_ICONS = { AERIEN: "✈", Routier: "🚚", Maritime: "🚢", Express: "⚡" };
@@ -113,6 +118,20 @@ function canModify(role, type) {
   if (role === "import" && type === "import") return true;
   if (role === "export" && type === "export") return true;
   return false;
+}
+
+function normalizeStatus(status) {
+  const aliases = {
+    "En attente": "Créé",
+    "En transit": "Expédié",
+  };
+  return aliases[status] || status || "Créé";
+}
+
+function getTimelineIndex(status) {
+  const normalized = normalizeStatus(status);
+  const index = TIMELINE_STEPS.indexOf(normalized);
+  return index >= 0 ? index : -1;
 }
 
 const AUDIT_FIELDS = [
@@ -288,6 +307,44 @@ function Badge({ label, bg, text, dot }) {
   );
 }
 
+function ShipmentTimeline({ status, compact = false }) {
+  const currentIndex = getTimelineIndex(status);
+  const isSpecial = currentIndex === -1;
+  return (
+    <div style={{ width: compact ? 170 : "100%", marginTop: compact ? 6 : 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${TIMELINE_STEPS.length}, 1fr)`, alignItems: "center", gap: 4 }}>
+        {TIMELINE_STEPS.map((step, index) => {
+          const done = !isSpecial && index <= currentIndex;
+          return (
+            <div key={step} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{
+                width: compact ? 9 : 13,
+                height: compact ? 9 : 13,
+                borderRadius: "50%",
+                background: done ? "#1e3a5f" : "#cbd5e1",
+                border: done ? "2px solid #1e3a5f" : "2px solid #e2e8f0",
+                flexShrink: 0
+              }} />
+              {index < TIMELINE_STEPS.length - 1 && (
+                <div style={{ height: 2, flex: 1, background: !isSpecial && index < currentIndex ? "#1e3a5f" : "#e2e8f0" }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {!compact && (
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${TIMELINE_STEPS.length}, 1fr)`, gap: 4, marginTop: 6 }}>
+          {TIMELINE_STEPS.map((step, index) => (
+            <div key={step} style={{ fontSize: 10, color: index <= currentIndex ? "#1e3a5f" : "#94a3b8", fontWeight: index === currentIndex ? 900 : 700, textAlign: "center" }}>
+              {step}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function KpiCard({ icon, label, value, sub, accent }) {
   return (
     <div style={{ background: "#fff", borderRadius: 22, padding: "22px 24px", boxShadow: "0 18px 45px rgba(15,23,42,.08)", border: "1px solid rgba(226,232,240,.9)", borderTop: `4px solid ${accent}`, flex: 1, minWidth: 150 }}>
@@ -365,7 +422,7 @@ function Modal({ mode, type, record, onClose, onSave }) {
     dateExpedition: "",
     datePrevue: "",
     dateLivraison: "",
-    statut: "En attente",
+    statut: "Créé",
     typeMarchandise: MARCHANDISES[0],
     priorite: "Normale",
     retard: 0,
@@ -431,6 +488,10 @@ function Modal({ mode, type, record, onClose, onSave }) {
           {field("Type Marchandise", "typeMarchandise", "text", MARCHANDISES)}
           {field("Priorité", "priorite", "text", PRIORITES)}
           {field("Statut", "statut", "text", STATUTS)}
+          <div style={{ gridColumn: "1/-1", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#475569", marginBottom: 4 }}>Timeline shipment</div>
+            <ShipmentTimeline status={form.statut} />
+          </div>
           {field("Statut Douane", "statutDouane", "text", DOUANE)}
           {field("Date demande enlèvement", "dateDemande", "date")}
           {field("Date enlèvement", "dateEnlevement", "date")}
@@ -500,7 +561,7 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], o
                 <td style={td}>{row.datePrevue || "—"}</td>
                 <td style={td}>{row.dateLivraison || "—"}</td>
                 <td style={td}>{retard !== 0 ? <span style={{ color: retard > 0 ? "#dc2626" : "#16a34a", fontWeight: 800 }}>{retard > 0 ? `+${retard}j` : `${retard}j`}</span> : "—"}</td>
-                <td style={td}><Badge label={row.statut} {...sc} /></td>
+                <td style={td}><Badge label={normalizeStatus(row.statut)} {...sc} /><ShipmentTimeline status={row.statut} compact /></td>
                 <td style={td}>{row.statutDouane}</td>
                 <td style={{ ...td, whiteSpace: "nowrap" }}>
                   <button disabled={!allowed} onClick={() => onEdit(row)} style={actionBtn("#e0f2fe", "#0369a1", !allowed)}>✎</button>
@@ -517,7 +578,7 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], o
 
 function Charts({ imports, exports }) {
   const all = [...imports, ...exports];
-  const statusData = Object.keys(STATUS_COLORS).map((s) => ({ name: s, value: all.filter((r) => r.statut === s).length })).filter((d) => d.value > 0);
+  const statusData = STATUTS.map((s) => ({ name: s, value: all.filter((r) => normalizeStatus(r.statut) === s).length })).filter((d) => d.value > 0);
   const transportData = TRANSPORTS.map((t) => ({ name: t, Imports: imports.filter((r) => r.typeTransport === t).length, Exports: exports.filter((r) => r.typeTransport === t).length })).filter((d) => d.Imports + d.Exports > 0);
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
