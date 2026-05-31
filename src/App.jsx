@@ -31,6 +31,8 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // ─── Firebase ────────────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -162,6 +164,112 @@ async function addHistory(user, action, direction, id, label, detail = "", chang
     userUid: user?.uid || "unknown",
     createdAt: serverTimestamp(),
   });
+}
+
+function formatDateForReport(value) {
+  return value ? String(value).slice(0, 10) : "—";
+}
+
+function buildReportRows(rows, direction) {
+  return rows.map((r) => [
+    direction,
+    r.id || "—",
+    r.semaine || "—",
+    r.entite || "—",
+    direction === "Import" ? (r.fournisseur || "—") : (r.client || "—"),
+    r.typeTransport || "—",
+    r.transporteur || "—",
+    r.tracking || "—",
+    formatDateForReport(r.dateExpedition),
+    formatDateForReport(r.datePrevue),
+    formatDateForReport(r.dateLivraison),
+    String(r.retard ?? 0),
+    r.statut || "—",
+    r.priorite || "—",
+    r.statutDouane || "—",
+  ]);
+}
+
+function generatePdfReport({ imports, exports, user, reportType = "all" }) {
+  const docPdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const generatedAt = new Date().toLocaleString("fr-FR");
+
+  const selectedImports = reportType === "exports" ? [] : imports;
+  const selectedExports = reportType === "imports" ? [] : exports;
+  const all = [...selectedImports, ...selectedExports];
+
+  const titleByType = {
+    all: "Rapport Global des Shipments",
+    imports: "Rapport des Imports",
+    exports: "Rapport des Exports",
+    delayed: "Rapport des Retards",
+  };
+
+  const delayedRows = all.filter((r) => Number(r.retard) > 0 || r.statutDouane === "Bloqué douane");
+  const finalImports = reportType === "delayed" ? selectedImports.filter((r) => Number(r.retard) > 0 || r.statutDouane === "Bloqué douane") : selectedImports;
+  const finalExports = reportType === "delayed" ? selectedExports.filter((r) => Number(r.retard) > 0 || r.statutDouane === "Bloqué douane") : selectedExports;
+  const finalAll = reportType === "delayed" ? delayedRows : all;
+
+  const kpi = {
+    total: finalAll.length,
+    imports: finalImports.length,
+    exports: finalExports.length,
+    livres: finalAll.filter((r) => r.statut === "Livré").length,
+    retardes: finalAll.filter((r) => Number(r.retard) > 0).length,
+    urgents: finalAll.filter((r) => r.priorite === "Urgente").length,
+    douane: finalAll.filter((r) => r.statutDouane === "Bloqué douane").length,
+  };
+
+  docPdf.setFillColor(15, 23, 42);
+  docPdf.rect(0, 0, 297, 27, "F");
+  docPdf.setTextColor(255, 255, 255);
+  docPdf.setFontSize(18);
+  docPdf.text("Transport Manager", 14, 11);
+  docPdf.setFontSize(11);
+  docPdf.text(titleByType[reportType] || titleByType.all, 14, 19);
+  docPdf.setFontSize(9);
+  docPdf.text(`Généré par: ${user?.email || "unknown"}`, 205, 11);
+  docPdf.text(`Date: ${generatedAt}`, 205, 18);
+
+  docPdf.setTextColor(15, 23, 42);
+  docPdf.setFontSize(12);
+  docPdf.text("Résumé", 14, 38);
+
+  autoTable(docPdf, {
+    startY: 42,
+    head: [["Total", "Imports", "Exports", "Livrés", "Retards", "Urgents", "Bloqués Douane"]],
+    body: [[kpi.total, kpi.imports, kpi.exports, kpi.livres, kpi.retardes, kpi.urgents, kpi.douane]],
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [99, 102, 241], textColor: 255 },
+    theme: "grid",
+  });
+
+  const body = [
+    ...buildReportRows(finalImports, "Import"),
+    ...buildReportRows(finalExports, "Export"),
+  ];
+
+  autoTable(docPdf, {
+    startY: docPdf.lastAutoTable.finalY + 10,
+    head: [["Direction", "ID", "Semaine", "Entité", "Fournisseur/Client", "Transport", "Transporteur", "Tracking", "Expédition", "Prévue", "Livraison", "Retard", "Statut", "Priorité", "Douane"]],
+    body: body.length ? body : [["—", "Aucune donnée", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"]],
+    styles: { fontSize: 7, cellPadding: 2, overflow: "linebreak" },
+    headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    theme: "striped",
+    margin: { left: 8, right: 8 },
+  });
+
+  const pageCount = docPdf.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i += 1) {
+    docPdf.setPage(i);
+    docPdf.setFontSize(8);
+    docPdf.setTextColor(100, 116, 139);
+    docPdf.text(`Page ${i}/${pageCount}`, 270, 202);
+  }
+
+  const safeDate = new Date().toISOString().slice(0, 10);
+  docPdf.save(`transport-manager-${reportType}-${safeDate}.pdf`);
 }
 
 // ─── UI Components ───────────────────────────────────────────────────────────
@@ -563,6 +671,8 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "all" })} style={{ ...headerBtn, background: "#0ea5e9" }}>📄 PDF Global</button>
+          <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "delayed" })} style={{ ...headerBtn, background: "#ef4444" }}>⚠ PDF Retards</button>
           <button disabled={!canModify(role, "import")} onClick={() => setModal({ mode: "add", type: "import" })} style={{ ...headerBtn, background: canModify(role, "import") ? "#6366f1" : "#64748b" }}>＋ Import</button>
           <button disabled={!canModify(role, "export")} onClick={() => setModal({ mode: "add", type: "export" })} style={{ ...headerBtn, background: canModify(role, "export") ? "#f59e0b" : "#64748b" }}>＋ Export</button>
           <button onClick={() => signOut(auth)} style={{ ...headerBtn, background: "#ef4444" }}>Logout</button>
@@ -591,8 +701,8 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "imports" && <>{filterBar}<ShipmentTable rows={filterRows(imports)} type="import" role={role} onEdit={(r) => setModal({ mode: "edit", type: "import", record: r })} onDelete={(id) => deleteShipment(id, "import")} /></>}
-        {activeTab === "exports" && <>{filterBar}<ShipmentTable rows={filterRows(exports)} type="export" role={role} onEdit={(r) => setModal({ mode: "edit", type: "export", record: r })} onDelete={(id) => deleteShipment(id, "export")} /></>}
+        {activeTab === "imports" && <>{filterBar}<div style={{ marginBottom: 14 }}><button onClick={() => generatePdfReport({ imports: filterRows(imports), exports: [], user, reportType: "imports" })} style={{ ...primaryBtn, background: "#6366f1" }}>📄 Exporter Imports PDF</button></div><ShipmentTable rows={filterRows(imports)} type="import" role={role} onEdit={(r) => setModal({ mode: "edit", type: "import", record: r })} onDelete={(id) => deleteShipment(id, "import")} /></>}
+        {activeTab === "exports" && <>{filterBar}<div style={{ marginBottom: 14 }}><button onClick={() => generatePdfReport({ imports: [], exports: filterRows(exports), user, reportType: "exports" })} style={{ ...primaryBtn, background: "#f59e0b" }}>📄 Exporter Exports PDF</button></div><ShipmentTable rows={filterRows(exports)} type="export" role={role} onEdit={(r) => setModal({ mode: "edit", type: "export", record: r })} onDelete={(id) => deleteShipment(id, "export")} /></>}
         {activeTab === "graphiques" && <Charts imports={imports} exports={exports} />}
 
         {activeTab === "alertes" && (
@@ -665,4 +775,3 @@ const panelStyle = { background: "#fff", borderRadius: 16, padding: 24, boxShado
 const codeBox = { display: "block", background: "#f1f5f9", padding: 12, borderRadius: 10, marginBottom: 10 };
 const centerPage = { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Segoe UI, system-ui, sans-serif" };
 const actionBtn = (bg, col, disabled) => ({ background: disabled ? "#e5e7eb" : bg, border: "none", color: disabled ? "#9ca3af" : col, borderRadius: 7, padding: "5px 9px", cursor: disabled ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 800, marginRight: 4 });
-const STATUS_COLORS = { "En attente": { background: "#fef3c7", color: "#b45309" }, "Livré": { background: "#d1fae5", color: "#16a34a" }, "Annulé": { background: "#fee2e2", color: "#dc2626" }, "Bloqué douane": { background: "#e0e7ff", color: "#4f46e5" } };
