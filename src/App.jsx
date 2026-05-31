@@ -450,16 +450,29 @@ function Modal({ mode, type, record, onClose, onSave }) {
   );
 }
 
-function ShipmentTable({ rows, type, role, onEdit, onDelete }) {
+function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleAll }) {
   const isImport = type === "import";
   const allowed = canModify(role, type);
-  const cols = ["Semaine", "Entité", isImport ? "Fournisseur" : "Client", "Transport", "Tracking", "Exp.", "Prévue", "Livraison", "Retard", "Statut", "Douane", "Actions"];
+  const cols = ["", "Semaine", "Entité", isImport ? "Fournisseur" : "Client", "Transport", "Tracking", "Exp.", "Prévue", "Livraison", "Retard", "Statut", "Douane", "Actions"];
+  const allChecked = allowed && rows.length > 0 && rows.every((r) => selectedIds.includes(r.id));
   return (
     <div style={{ overflowX: "auto", borderRadius: 22, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 16px 36px rgba(15,23,42,.06)" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
           <tr style={{ background: isImport ? "#f0f9ff" : "#fffbeb" }}>
-            {cols.map((c) => <th key={c} style={{ padding: "12px 14px", textAlign: "left", color: isImport ? "#0369a1" : "#b45309", fontSize: 12, whiteSpace: "nowrap" }}>{c}</th>)}
+            {cols.map((c, index) => (
+              <th key={`${c}-${index}`} style={{ padding: "12px 14px", textAlign: "left", color: isImport ? "#0369a1" : "#b45309", fontSize: 12, whiteSpace: "nowrap" }}>
+                {index === 0 ? (
+                  <input
+                    type="checkbox"
+                    disabled={!allowed || rows.length === 0}
+                    checked={allChecked}
+                    onChange={(e) => onToggleAll && onToggleAll(e.target.checked)}
+                    title="Select all visible rows"
+                  />
+                ) : c}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -469,6 +482,15 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete }) {
             const retard = Number(row.retard || 0);
             return (
               <tr key={row.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}>
+                <td style={td}>
+                  <input
+                    type="checkbox"
+                    disabled={!allowed}
+                    checked={selectedIds.includes(row.id)}
+                    onChange={() => onToggleSelect && onToggleSelect(row.id)}
+                    title="Select this shipment"
+                  />
+                </td>
                 <td style={td}><b>{row.semaine}</b></td>
                 <td style={td}>{row.entite}</td>
                 <td style={td}>{isImport ? row.fournisseur : row.client}</td>
@@ -541,6 +563,9 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [filterStatut, setFilterStatut] = useState("Tous");
   const [filterTransport, setFilterTransport] = useState("Tous");
+  const [selectedImports, setSelectedImports] = useState([]);
+  const [selectedExports, setSelectedExports] = useState([]);
+  const [selectedHistory, setSelectedHistory] = useState([]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -562,6 +587,18 @@ export default function App() {
     const unsubHistory = onSnapshot(collection(db, "history"), (snap) => setHistory(snap.docs.map((d) => ({ firebaseId: d.id, ...d.data() }))));
     return () => { unsubImports(); unsubExports(); unsubHistory(); };
   }, [user]);
+
+  useEffect(() => {
+    setSelectedImports((prev) => prev.filter((id) => imports.some((r) => r.id === id)));
+  }, [imports]);
+
+  useEffect(() => {
+    setSelectedExports((prev) => prev.filter((id) => exports.some((r) => r.id === id)));
+  }, [exports]);
+
+  useEffect(() => {
+    setSelectedHistory((prev) => prev.filter((id) => history.some((h) => h.firebaseId === id)));
+  }, [history]);
 
   const kpis = useMemo(() => {
     const all = [...imports, ...exports];
@@ -639,6 +676,99 @@ export default function App() {
     );
   };
 
+  const toggleShipmentSelection = (type, id) => {
+    const setter = type === "import" ? setSelectedImports : setSelectedExports;
+    setter((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  const toggleAllVisibleShipments = (type, visibleRows, checked) => {
+    const setter = type === "import" ? setSelectedImports : setSelectedExports;
+    const visibleIds = visibleRows.map((r) => r.id);
+    setter((prev) => checked ? Array.from(new Set([...prev, ...visibleIds])) : prev.filter((id) => !visibleIds.includes(id)));
+  };
+
+  const bulkDeleteShipments = async (type, rowsToDelete, label) => {
+    if (!canModify(role, type)) return alert("You do not have permission for this action.");
+    if (!rowsToDelete.length) return alert("No shipments selected.");
+
+    const direction = type === "import" ? "Import" : "Export";
+    const collectionName = type === "import" ? "imports" : "exports";
+    const ok = window.confirm(`${label}?
+
+This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} shipment(s).`);
+    if (!ok) return;
+
+    try {
+      await Promise.all(rowsToDelete.map(async (r) => {
+        await deleteDoc(doc(db, collectionName, r.firebaseId || r.id));
+        await addHistory(
+          user,
+          "Suppression",
+          direction,
+          r.id,
+          `${r.entite || ""} · ${r.fournisseur || r.client || ""}`,
+          `Shipment supprimé par action groupée · Tracking: ${r.tracking || "N/A"}`,
+          getChanges(r, {})
+        );
+      }));
+      if (type === "import") setSelectedImports([]);
+      else setSelectedExports([]);
+      alert(`${rowsToDelete.length} shipment(s) deleted successfully.`);
+    } catch (error) {
+      console.error(error);
+      alert("Delete failed. Check permissions and try again.");
+    }
+  };
+
+  const selectedRowsFor = (type) => {
+    const rows = type === "import" ? imports : exports;
+    const selected = type === "import" ? selectedImports : selectedExports;
+    return rows.filter((r) => selected.includes(r.id));
+  };
+
+  const deleteSelectedHistory = async () => {
+    if (role !== "admin") return alert("Only admin can delete audit history.");
+    const rows = history.filter((h) => selectedHistory.includes(h.firebaseId));
+    if (!rows.length) return alert("No history records selected.");
+    const ok = window.confirm(`Delete ${rows.length} selected audit history record(s)?`);
+    if (!ok) return;
+    try {
+      await Promise.all(rows.map((h) => deleteDoc(doc(db, "history", h.firebaseId))));
+      setSelectedHistory([]);
+      alert("Selected history records deleted successfully.");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete selected history records.");
+    }
+  };
+
+  const toggleHistorySelection = (id) => {
+    setSelectedHistory((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  const clearHistory = async () => {
+    if (role !== "admin") return alert("Only admin can clear the audit history.");
+    if (!history.length) return alert("History is already empty.");
+
+    const ok = window.confirm(
+      `Delete all audit history records?\n\nThis will remove ${history.length} record(s) permanently.`
+    );
+    if (!ok) return;
+
+    try {
+      await Promise.all(
+        history
+          .filter((h) => h.firebaseId)
+          .map((h) => deleteDoc(doc(db, "history", h.firebaseId)))
+      );
+      setSelectedHistory([]);
+      alert("Audit history cleared successfully.");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to clear history. Check Firestore rules and try again.");
+    }
+  };
+
   const createRoleDocHelp = (
     <div style={{ ...panelStyle, borderLeft: "4px solid #f59e0b" }}>
       <h3 style={{ marginTop: 0 }}>Role missing or viewer access</h3>
@@ -666,6 +796,41 @@ export default function App() {
       <button onClick={() => { setSearch(""); setFilterStatut("Tous"); setFilterTransport("Tous"); }} style={secondaryBtn}>↺ Reset</button>
     </div>
   );
+
+  const filteredImports = filterRows(imports);
+  const filteredExports = filterRows(exports);
+  const selectedImportRows = selectedRowsFor("import");
+  const selectedExportRows = selectedRowsFor("export");
+
+  const shipmentBulkBar = (type, allRows, filteredRows, selectedRows) => {
+    const allowed = canModify(role, type);
+    const isImport = type === "import";
+    return (
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
+        <button onClick={() => generatePdfReport({ imports: isImport ? filteredRows : [], exports: isImport ? [] : filteredRows, user, reportType: isImport ? "imports" : "exports" })} style={{ ...primaryBtn, background: isImport ? "#1e3a5f" : "#b45309" }}>
+          📄 Exporter {isImport ? "Imports" : "Exports"} PDF
+        </button>
+        {allowed && (
+          <>
+            <button
+              onClick={() => bulkDeleteShipments(type, selectedRows, `Delete selected ${isImport ? "imports" : "exports"}`)}
+              disabled={!selectedRows.length}
+              style={{ ...secondaryBtn, background: selectedRows.length ? "#fee2e2" : "#f1f5f9", color: selectedRows.length ? "#b91c1c" : "#94a3b8", cursor: selectedRows.length ? "pointer" : "not-allowed", borderColor: selectedRows.length ? "#fecaca" : "#e2e8f0" }}
+            >
+              🗑 Delete Selected ({selectedRows.length})
+            </button>
+            <button
+              onClick={() => bulkDeleteShipments(type, allRows, `Clear all ${isImport ? "imports" : "exports"}`)}
+              disabled={!allRows.length}
+              style={{ ...secondaryBtn, background: allRows.length ? "#fff7ed" : "#f1f5f9", color: allRows.length ? "#c2410c" : "#94a3b8", cursor: allRows.length ? "pointer" : "not-allowed", borderColor: allRows.length ? "#fed7aa" : "#e2e8f0" }}
+            >
+              🧹 Clear All {isImport ? "Imports" : "Exports"}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ fontFamily: "Segoe UI, system-ui, sans-serif", background: "linear-gradient(135deg,#f8fafc 0%,#eef6fb 48%,#f8fafc 100%)", minHeight: "100vh", color: "#0f172a" }}>
@@ -719,8 +884,8 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "imports" && <>{filterBar}<div style={{ marginBottom: 14 }}><button onClick={() => generatePdfReport({ imports: filterRows(imports), exports: [], user, reportType: "imports" })} style={{ ...primaryBtn, background: "#1e3a5f" }}>📄 Exporter Imports PDF</button></div><ShipmentTable rows={filterRows(imports)} type="import" role={role} onEdit={(r) => setModal({ mode: "edit", type: "import", record: r })} onDelete={(id) => deleteShipment(id, "import")} /></>}
-        {activeTab === "exports" && <>{filterBar}<div style={{ marginBottom: 14 }}><button onClick={() => generatePdfReport({ imports: [], exports: filterRows(exports), user, reportType: "exports" })} style={{ ...primaryBtn, background: "#b45309" }}>📄 Exporter Exports PDF</button></div><ShipmentTable rows={filterRows(exports)} type="export" role={role} onEdit={(r) => setModal({ mode: "edit", type: "export", record: r })} onDelete={(id) => deleteShipment(id, "export")} /></>}
+        {activeTab === "imports" && <>{filterBar}{shipmentBulkBar("import", imports, filteredImports, selectedImportRows)}<ShipmentTable rows={filteredImports} type="import" role={role} selectedIds={selectedImports} onToggleSelect={(id) => toggleShipmentSelection("import", id)} onToggleAll={(checked) => toggleAllVisibleShipments("import", filteredImports, checked)} onEdit={(r) => setModal({ mode: "edit", type: "import", record: r })} onDelete={(id) => deleteShipment(id, "import")} /></>}
+        {activeTab === "exports" && <>{filterBar}{shipmentBulkBar("export", exports, filteredExports, selectedExportRows)}<ShipmentTable rows={filteredExports} type="export" role={role} selectedIds={selectedExports} onToggleSelect={(id) => toggleShipmentSelection("export", id)} onToggleAll={(checked) => toggleAllVisibleShipments("export", filteredExports, checked)} onEdit={(r) => setModal({ mode: "edit", type: "export", record: r })} onDelete={(id) => deleteShipment(id, "export")} /></>}
         {activeTab === "graphiques" && <Charts imports={imports} exports={exports} />}
 
         {activeTab === "alertes" && (
@@ -736,10 +901,55 @@ export default function App() {
 
         {activeTab === "historique" && (
           <div style={panelStyle}>
-            <h3>🕒 Audit Log</h3>
-            <p style={{ color: "#64748b", marginTop: -8 }}>Tracks who changed shipments, when, and exactly what fields changed.</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <h3 style={{ marginTop: 0 }}>🕒 Audit Log</h3>
+                <p style={{ color: "#64748b", marginTop: -8 }}>Tracks who changed shipments, when, and exactly what fields changed.</p>
+              </div>
+              {role === "admin" && (
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    onClick={deleteSelectedHistory}
+                    disabled={!selectedHistory.length}
+                    style={{
+                      ...secondaryBtn,
+                      background: selectedHistory.length ? "#fee2e2" : "#f1f5f9",
+                      color: selectedHistory.length ? "#b91c1c" : "#94a3b8",
+                      cursor: selectedHistory.length ? "pointer" : "not-allowed",
+                      borderColor: selectedHistory.length ? "#fecaca" : "#e2e8f0",
+                    }}
+                  >
+                    🗑 Delete Selected ({selectedHistory.length})
+                  </button>
+                  <button
+                    onClick={clearHistory}
+                    disabled={!history.length}
+                    style={{
+                      ...secondaryBtn,
+                      background: history.length ? "#fff7ed" : "#f1f5f9",
+                      color: history.length ? "#c2410c" : "#94a3b8",
+                      cursor: history.length ? "pointer" : "not-allowed",
+                      borderColor: history.length ? "#fed7aa" : "#e2e8f0",
+                    }}
+                  >
+                    🧹 Clear All History
+                  </button>
+                </div>
+              )}
+            </div>
+            {history.length === 0 && (
+              <div style={{ padding: 20, background: "#f8fafc", borderRadius: 14, color: "#64748b" }}>
+                No audit history records.
+              </div>
+            )}
             {[...history].sort((a, b) => String(b.ts).localeCompare(String(a.ts))).map((h) => (
               <div key={h.firebaseId} style={{ padding: 14, background: "#f8fafc", borderRadius: 12, marginBottom: 12, borderLeft: `4px solid ${h.action === "Ajout" ? "#16a34a" : h.action === "Suppression" ? "#b91c1c" : "#3b82f6"}` }}>
+                {role === "admin" && (
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                    <input type="checkbox" checked={selectedHistory.includes(h.firebaseId)} onChange={() => toggleHistorySelection(h.firebaseId)} />
+                    Select log
+                  </label>
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div><b>{h.action}</b> [{h.direction}] {h.id} — {h.label}</div>
                   <div style={{ fontSize: 12, color: "#64748b" }}>{h.ts}</div>
