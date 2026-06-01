@@ -50,7 +50,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const BRAND_BANNER = "/figeac-app-header.png";
+const BRAND_BANNER = "/figeac-banner.png";
 
 // ─── Master Data ─────────────────────────────────────────────────────────────
 const TIMELINE_STEPS = ["Créé", "Prêt à expédier", "Expédié", "Douane", "Livré"];
@@ -999,11 +999,11 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
   return (
     <div className="tm-app">
       <header className="tm-brand-header">
+        <div className="tm-header-overlay" />
         <div className="tm-header-title-wrap">
           <div className="tm-header-divider" />
-          <div className="tm-brand-header-title">Transport Management System</div>
+          <div className="tm-header-title">Transport Management System</div>
         </div>
-
         <div className="tm-brand-user">
           <div className="tm-avatar tm-brand-avatar">{(user.email || "A").slice(0, 1).toUpperCase()}</div>
           <div>
@@ -1017,17 +1017,18 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
         :root { --navy:#07213d; --navy2:#0b3358; --orange:#f97316; --orange2:#ea580c; --soft:#f6f8fb; --line:#e5e7eb; --text:#0f172a; --muted:#64748b; }
         * { box-sizing: border-box; }
         html, body, #root { margin:0; padding:0; width:100%; min-height:100%; } body { margin:0; overflow-x:hidden; }
-        .tm-app { min-height:100vh; background:#f5f7fb; color:var(--text); font-family:Segoe UI, system-ui, sans-serif; }
-        .tm-brand-header { height:100px; width:100vw; background-image:linear-gradient(90deg,rgba(6,17,31,.10),rgba(6,17,31,.03),rgba(6,17,31,.16)), url('/figeac-app-header.png'); background-size:100% 100%; background-position:center; background-repeat:no-repeat; border-bottom:4px solid #07213d; display:flex; align-items:center; justify-content:space-between; padding:0 34px; box-shadow:0 2px 18px rgba(15,23,42,.08); }
-        .tm-header-title-wrap { margin-left:385px; display:flex; align-items:center; gap:24px; color:#fff; text-shadow:0 3px 12px rgba(0,0,0,.35); }
-        .tm-header-divider { width:1px; height:48px; background:rgba(255,255,255,.70); }
-        .tm-brand-header-title { font-size:24px; font-weight:900; color:#fff; white-space:nowrap; }
-        .tm-brand-user { display:flex; align-items:center; gap:12px; color:#0b2545; flex-shrink:0; background:rgba(255,255,255,.92); border:1px solid rgba(255,255,255,.65); padding:9px 16px; border-radius:999px; box-shadow:0 10px 28px rgba(15,23,42,.14); backdrop-filter:blur(10px); }
+        .tm-app { height:100vh; overflow:hidden; background:#f5f7fb; color:var(--text); font-family:Segoe UI, system-ui, sans-serif; }
+        .tm-brand-header { height:96px; width:100vw; position:relative; overflow:hidden; background-image:url('/figeac-banner.png'); background-size:100% 100%; background-position:center; background-repeat:no-repeat; border-bottom:4px solid #07213d; display:flex; align-items:center; justify-content:space-between; padding:0 34px; box-shadow:0 2px 18px rgba(15,23,42,.08); }
+        .tm-header-overlay { position:absolute; inset:0; background:linear-gradient(90deg,rgba(7,33,61,.08),rgba(7,33,61,.00) 48%,rgba(7,33,61,.20)); pointer-events:none; }
+        .tm-header-title-wrap { position:relative; z-index:1; margin-left:390px; display:flex; align-items:center; gap:22px; color:#fff; text-shadow:0 3px 12px rgba(0,0,0,.35); }
+        .tm-header-divider { width:1px; height:48px; background:rgba(255,255,255,.72); }
+        .tm-header-title { font-size:24px; font-weight:900; white-space:nowrap; letter-spacing:.2px; }
+        .tm-brand-user { position:relative; z-index:1; display:flex; align-items:center; gap:12px; color:#0b2545; flex-shrink:0; background:rgba(255,255,255,.88); padding:10px 18px; border-radius:999px; box-shadow:0 12px 28px rgba(15,23,42,.12); backdrop-filter:blur(8px); }
         .tm-brand-avatar { width:46px; height:46px; background:#08213e; }
         .tm-brand-user-name { font-weight:950; font-size:17px; }
         .tm-brand-user-email { font-size:13px; color:#475569; margin-top:2px; }
-        .tm-shell { min-height:calc(100vh - 100px); width:100vw; display:grid; grid-template-columns:220px minmax(0,1fr); background:#f5f7fb; color:var(--text); }
-        .tm-sidebar { background:linear-gradient(180deg,#08213e 0%,#0b355d 72%,#061526 100%); color:#fff; position:sticky; top:0; height:calc(100vh - 100px); display:flex; flex-direction:column; box-shadow:18px 0 50px rgba(2,8,23,.14); z-index:20; }
+        .tm-shell { height:calc(100vh - 96px); width:100vw; display:grid; grid-template-columns:220px minmax(0,1fr); background:#f5f7fb; color:var(--text); overflow:hidden; }
+        .tm-sidebar { background:linear-gradient(180deg,#08213e 0%,#0b355d 72%,#061526 100%); color:#fff; position:relative; height:calc(100vh - 96px); display:flex; flex-direction:column; box-shadow:18px 0 50px rgba(2,8,23,.14); z-index:20; overflow:hidden; }
         .tm-brand-img { display:none; }
         .tm-brand-block { padding:24px 18px 20px; border-bottom:1px solid rgba(255,255,255,.10); text-align:center; }
         .tm-brand-title { font-size:19px; font-weight:950; letter-spacing:.5px; }
@@ -1039,7 +1040,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
         .tm-nav-icon { width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-weight:950; font-size:17px; }
         .tm-sidebar-footer { margin-top:auto; padding:16px 14px; border-top:1px solid rgba(255,255,255,.12); }
         .tm-logout { width:100%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:#fff; padding:12px 14px; border-radius:12px; font-weight:900; cursor:pointer; }
-        .tm-main { min-width:0; }
+        .tm-main { min-width:0; height:calc(100vh - 96px); overflow-y:auto; overflow-x:hidden; }
         .tm-topbar { height:82px; background:rgba(255,255,255,.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 26px; position:sticky; top:0; z-index:10; }
         .tm-page-title { font-size:25px; font-weight:950; margin:0; }
         .tm-page-sub { color:var(--muted); font-size:13px; margin-top:4px; }
@@ -1083,8 +1084,8 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
         .tm-list-sub { color:#64748b; font-size:12px; margin-top:2px; }
         .tm-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
         .tm-filter-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(15,23,42,.05); margin-bottom:16px; }
-        @media(max-width:1100px){.tm-brand-header{height:86px;padding:0 18px;background-size:cover;background-position:left center}.tm-header-title-wrap{margin-left:245px;gap:14px}.tm-header-divider{height:38px}.tm-brand-header-title{font-size:18px}.tm-brand-user-email{display:none}.tm-brand-avatar{width:40px;height:40px}.tm-brand-user{padding:8px 12px}.tm-shell{grid-template-columns:1fr;min-height:auto}.tm-sidebar{position:relative;height:auto}.tm-nav{flex-direction:row;overflow:auto}.tm-sidebar-footer{display:none}.tm-metrics{grid-template-columns:repeat(2,1fr)}.tm-grid-2{grid-template-columns:1fr}.tm-dashboard-main{grid-template-columns:1fr}.tm-charts-area{grid-template-columns:1fr}.tm-topbar{position:relative}.tm-brand-img{height:80px}}
-        @media(max-width:700px){.tm-brand-header{height:74px;padding:0 12px;background-size:cover;background-position:left center}.tm-header-title-wrap{margin-left:150px}.tm-header-divider{display:none}.tm-brand-header-title{font-size:13px;max-width:145px;white-space:normal;line-height:1.15}.tm-brand-user{display:none}.tm-content{padding:14px}.tm-topbar{height:auto;padding:16px;align-items:flex-start;gap:12px;flex-direction:column}.tm-metrics{grid-template-columns:1fr}.tm-hero{align-items:flex-start;flex-direction:column}.tm-actions{justify-content:flex-start}.tm-page-title{font-size:22px}}
+        @media(max-width:1100px){.tm-app{height:auto;overflow:auto}.tm-brand-header{height:84px;padding:0 18px}.tm-header-title-wrap{margin-left:260px}.tm-header-title{font-size:18px}.tm-header-divider{height:38px}.tm-brand-user-email{display:none}.tm-shell{grid-template-columns:1fr;height:auto;min-height:auto;overflow:visible}.tm-sidebar{position:relative;height:auto;overflow:visible}.tm-main{height:auto;overflow:visible;width:100%;margin-left:0}.tm-nav{flex-direction:row;overflow:auto}.tm-sidebar-footer{display:none}.tm-metrics{grid-template-columns:repeat(2,1fr)}.tm-grid-2{grid-template-columns:1fr}.tm-dashboard-main{grid-template-columns:1fr}.tm-charts-area{grid-template-columns:1fr}.tm-topbar{position:relative}.tm-brand-img{height:80px}}
+        @media(max-width:700px){.tm-brand-header{height:74px;padding:0 12px;background-size:cover}.tm-header-title-wrap{display:none}.tm-brand-user{padding:8px 12px}.tm-brand-avatar{width:38px;height:38px}.tm-content{padding:14px}.tm-topbar{height:auto;padding:16px;align-items:flex-start;gap:12px;flex-direction:column}.tm-metrics{grid-template-columns:1fr}.tm-hero{align-items:flex-start;flex-direction:column}.tm-actions{justify-content:flex-start}.tm-page-title{font-size:22px}}
       `}</style>
 
       <aside className="tm-sidebar">
