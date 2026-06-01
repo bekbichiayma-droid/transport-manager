@@ -959,6 +959,61 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
     return (delayed.reduce((sum, r) => sum + Number(r.retard || 0), 0) / delayed.length).toFixed(1);
   })();
 
+  // Advanced dashboard KPI calculations
+  const allShipments = [...imports, ...exports];
+  const deliveredShipments = allShipments.filter((r) => normalizeStatus(r.statut) === "Livré" || r.dateLivraison);
+  const onTimeDelivered = deliveredShipments.filter((r) => Number(r.retard || 0) <= 0).length;
+  const onTimeDeliveryRate = deliveredShipments.length ? Math.round((onTimeDelivered / deliveredShipments.length) * 100) : 0;
+  const averageDelayAll = allShipments.length
+    ? (allShipments.reduce((sum, r) => sum + Math.max(Number(r.retard || 0), 0), 0) / allShipments.length).toFixed(1)
+    : 0;
+  const activeInCustoms = allShipments.filter((r) => r.statutDouane === "En cours" || normalizeStatus(r.statut) === "Douane").length;
+  const criticalShipments = allShipments.filter((r) => Number(r.retard || 0) >= 3 || r.priorite === "Urgente" || r.statutDouane === "Bloqué douane").length;
+
+  const topBy = (rows, getKey, limit = 5) => {
+    const counts = {};
+    rows.forEach((row) => {
+      const key = getKey(row);
+      if (!key || key === "Autre") return;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([name, value]) => ({ name, value }));
+  };
+
+  const topTransporteurs = topBy(allShipments, (r) => r.transporteur);
+  const topFournisseurs = topBy(imports, (r) => r.fournisseur);
+  const topClients = topBy(exports, (r) => r.client);
+
+  const monthlyVolume = (() => {
+    const counts = {};
+    allShipments.forEach((row) => {
+      const date = row.dateExpedition || row.dateDemande || row.createdAt?.toDate?.()?.toISOString?.().slice(0, 10) || "";
+      const month = String(date).slice(0, 7) || "No date";
+      if (!counts[month]) counts[month] = { month, Imports: 0, Exports: 0, Total: 0 };
+      if (imports.some((item) => item.id === row.id)) counts[month].Imports += 1;
+      else counts[month].Exports += 1;
+      counts[month].Total += 1;
+    });
+    return Object.values(counts).sort((a, b) => a.month.localeCompare(b.month)).slice(-6);
+  })();
+
+  const ListStat = ({ title, data, emptyText }) => (
+    <div className="tm-advanced-list">
+      <h4>{title}</h4>
+      {data.length === 0 && <div className="tm-advanced-empty">{emptyText}</div>}
+      {data.map((item, index) => (
+        <div key={`${title}-${item.name}`} className="tm-rank-row">
+          <span className="tm-rank-number">{index + 1}</span>
+          <span className="tm-rank-name">{item.name}</span>
+          <b>{item.value}</b>
+        </div>
+      ))}
+    </div>
+  );
+
   const pageTitles = {
     dashboard: ["Tableau de bord", "Vue d’ensemble des opérations de transport"],
     imports: ["Importations", "Gestion des flux entrants et documents de suivi"],
@@ -1084,8 +1139,21 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
         .tm-list-sub { color:#64748b; font-size:12px; margin-top:2px; }
         .tm-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
         .tm-filter-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(15,23,42,.05); margin-bottom:16px; }
-        @media(max-width:1100px){.tm-app{height:auto;overflow:auto}.tm-brand-header{height:84px;padding:0 18px}.tm-header-title-wrap{margin-left:260px}.tm-header-title{font-size:18px}.tm-header-divider{height:38px}.tm-brand-user-email{display:none}.tm-shell{grid-template-columns:1fr;height:auto;min-height:auto;overflow:visible}.tm-sidebar{position:relative;height:auto;overflow:visible}.tm-main{height:auto;overflow:visible;width:100%;margin-left:0}.tm-nav{flex-direction:row;overflow:auto}.tm-sidebar-footer{display:none}.tm-metrics{grid-template-columns:repeat(2,1fr)}.tm-grid-2{grid-template-columns:1fr}.tm-dashboard-main{grid-template-columns:1fr}.tm-charts-area{grid-template-columns:1fr}.tm-topbar{position:relative}.tm-brand-img{height:80px}}
-        @media(max-width:700px){.tm-brand-header{height:74px;padding:0 12px;background-size:cover}.tm-header-title-wrap{display:none}.tm-brand-user{padding:8px 12px}.tm-brand-avatar{width:38px;height:38px}.tm-content{padding:14px}.tm-topbar{height:auto;padding:16px;align-items:flex-start;gap:12px;flex-direction:column}.tm-metrics{grid-template-columns:1fr}.tm-hero{align-items:flex-start;flex-direction:column}.tm-actions{justify-content:flex-start}.tm-page-title{font-size:22px}}
+        .tm-advanced-kpis { display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:14px; margin-bottom:18px; }
+        .tm-advanced-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 10px 28px rgba(15,23,42,.06); }
+        .tm-advanced-card .label { font-size:12px; color:#64748b; font-weight:900; text-transform:uppercase; letter-spacing:.7px; }
+        .tm-advanced-card .value { font-size:28px; font-weight:950; color:#0f172a; margin-top:8px; }
+        .tm-advanced-card .sub { font-size:12px; color:#64748b; margin-top:4px; }
+        .tm-advanced-grid { display:grid; grid-template-columns:1.25fr .75fr; gap:16px; margin-bottom:18px; }
+        .tm-advanced-lists { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .tm-advanced-list h4 { margin:0 0 12px; color:#0f172a; font-size:14px; }
+        .tm-rank-row { display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+        .tm-rank-row:last-child { border-bottom:none; }
+        .tm-rank-number { width:24px; height:24px; border-radius:8px; background:#eef2ff; color:#1e3a5f; display:inline-flex; align-items:center; justify-content:center; font-weight:950; font-size:12px; }
+        .tm-rank-name { font-weight:800; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .tm-advanced-empty { color:#94a3b8; font-size:13px; padding:10px 0; }
+        @media(max-width:1100px){.tm-app{height:auto;overflow:auto}.tm-brand-header{height:84px;padding:0 18px}.tm-header-title-wrap{margin-left:260px}.tm-header-title{font-size:18px}.tm-header-divider{height:38px}.tm-brand-user-email{display:none}.tm-shell{grid-template-columns:1fr;height:auto;min-height:auto;overflow:visible}.tm-sidebar{position:relative;height:auto;overflow:visible}.tm-main{height:auto;overflow:visible;width:100%;margin-left:0}.tm-nav{flex-direction:row;overflow:auto}.tm-sidebar-footer{display:none}.tm-metrics{grid-template-columns:repeat(2,1fr)}.tm-advanced-kpis{grid-template-columns:repeat(2,1fr)}.tm-advanced-grid{grid-template-columns:1fr}.tm-advanced-lists{grid-template-columns:1fr}.tm-grid-2{grid-template-columns:1fr}.tm-dashboard-main{grid-template-columns:1fr}.tm-charts-area{grid-template-columns:1fr}.tm-topbar{position:relative}.tm-brand-img{height:80px}}
+        @media(max-width:700px){.tm-brand-header{height:74px;padding:0 12px;background-size:cover}.tm-header-title-wrap{display:none}.tm-brand-user{padding:8px 12px}.tm-brand-avatar{width:38px;height:38px}.tm-content{padding:14px}.tm-topbar{height:auto;padding:16px;align-items:flex-start;gap:12px;flex-direction:column}.tm-metrics{grid-template-columns:1fr}.tm-advanced-kpis{grid-template-columns:1fr}.tm-advanced-grid{grid-template-columns:1fr}.tm-advanced-lists{grid-template-columns:1fr}.tm-hero{align-items:flex-start;flex-direction:column}.tm-actions{justify-content:flex-start}.tm-page-title{font-size:22px}}
       `}</style>
 
       <aside className="tm-sidebar">
@@ -1139,6 +1207,67 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
                 {metricCard({ icon: "✓", label: "Livrées", value: kpis.livres, sub: `${onTimeRate}% on-time rate`, tone: "green" })}
                 {metricCard({ icon: "!", label: "Retards", value: kpis.retardes, sub: `Moyenne: ${avgDelay} j`, tone: "red" })}
                 {metricCard({ icon: "▣", label: "Douane", value: kpis.douaneBloque, sub: "Blocages actifs", tone: "purple" })}
+              </div>
+
+              <div className="tm-advanced-kpis">
+                <div className="tm-advanced-card">
+                  <div className="label">On-time delivery</div>
+                  <div className="value">{onTimeDeliveryRate}%</div>
+                  <div className="sub">{onTimeDelivered}/{deliveredShipments.length} livraisons à temps</div>
+                </div>
+                <div className="tm-advanced-card">
+                  <div className="label">Average delay</div>
+                  <div className="value">{averageDelayAll} j</div>
+                  <div className="sub">Moyenne sur toutes les opérations</div>
+                </div>
+                <div className="tm-advanced-card">
+                  <div className="label">Customs in progress</div>
+                  <div className="value">{activeInCustoms}</div>
+                  <div className="sub">Dossiers en douane ou étape Douane</div>
+                </div>
+                <div className="tm-advanced-card">
+                  <div className="label">Critical shipments</div>
+                  <div className="value">{criticalShipments}</div>
+                  <div className="sub">Urgent, bloqué ou retard ≥ 3 jours</div>
+                </div>
+              </div>
+
+              <div className="tm-advanced-grid">
+                <div className="tm-panel">
+                  <h3>Volume mensuel import/export</h3>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={monthlyVolume.length ? monthlyVolume : [{ month: "No data", Imports: 0, Exports: 0 }]}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748b" }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#64748b" }} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Imports" fill="#1d4ed8" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="Exports" fill="#f97316" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="tm-panel">
+                  <h3>Performance rapide</h3>
+                  <div className="tm-list-row">
+                    <div><div className="tm-list-title">Livraisons à temps</div><div className="tm-list-sub">Basé sur les shipments livrés</div></div>
+                    <b>{onTimeDeliveryRate}%</b>
+                  </div>
+                  <div className="tm-list-row">
+                    <div><div className="tm-list-title">Retard moyen</div><div className="tm-list-sub">Retards positifs uniquement</div></div>
+                    <b>{avgDelay} j</b>
+                  </div>
+                  <div className="tm-list-row">
+                    <div><div className="tm-list-title">Dossiers critiques</div><div className="tm-list-sub">Urgents / douane / retards</div></div>
+                    <b>{criticalShipments}</b>
+                  </div>
+                </div>
+              </div>
+
+              <div className="tm-advanced-lists" style={{ marginBottom: 18 }}>
+                <div className="tm-panel"><ListStat title="Top Transporteurs" data={topTransporteurs} emptyText="Aucun transporteur pour le moment." /></div>
+                <div className="tm-panel"><ListStat title="Top Fournisseurs" data={topFournisseurs} emptyText="Aucun fournisseur pour le moment." /></div>
+                <div className="tm-panel"><ListStat title="Top Clients" data={topClients} emptyText="Aucun client pour le moment." /></div>
               </div>
 
               <div className="tm-dashboard-main">
