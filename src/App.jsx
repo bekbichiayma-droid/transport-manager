@@ -50,6 +50,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const BRAND_BANNER = "/figeac-app-header.png";
 
 // ─── Master Data ─────────────────────────────────────────────────────────────
 const TIMELINE_STEPS = ["Créé", "Prêt à expédier", "Expédié", "Douane", "Livré"];
@@ -57,7 +58,7 @@ const STATUTS = [...TIMELINE_STEPS, "Bloqué", "Annulé"];
 const TRANSPORTS = ["AERIEN", "Routier", "Maritime", "Express"];
 const PRIORITES = ["Normale", "Haute", "Urgente"];
 const DOUANE = ["N/A", "En cours", "Dédouané", "Bloqué douane"];
-const ENTITES = ["Aéronautique Casablanca", "Figeacaero", "Autre"];
+const ENTITES = ["FIGEAC AERO", "Figeacaero", "Autre"];
 const SEMAINES = ["S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20"];
 
 // Change these lists any time you want.
@@ -245,7 +246,7 @@ function generatePdfReport({ imports, exports, user, reportType = "all" }) {
   docPdf.rect(0, 0, 297, 27, "F");
   docPdf.setTextColor(255, 255, 255);
   docPdf.setFontSize(18);
-  docPdf.text("Aéronautique Casablanca", 14, 11);
+  docPdf.text("FIGEAC AERO", 14, 11);
   docPdf.setFontSize(9);
   docPdf.setTextColor(100);
   docPdf.text("Rapport logistique import / export", 14, 17);
@@ -377,39 +378,55 @@ function LoginScreen() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at top left,#1e3a5f 0,#0f172a 42%,#06111f 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Segoe UI, system-ui, sans-serif", padding: 20 }}>
-      <form onSubmit={login} style={{ width: "min(420px,100%)", background: "rgba(255,255,255,.95)", borderRadius: 28, padding: 32, boxShadow: "0 30px 90px rgba(0,0,0,.30)", border: "1px solid rgba(255,255,255,.45)", backdropFilter: "blur(18px)" }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ width: 54, height: 54, borderRadius: 16, background: "linear-gradient(135deg,#0f172a,#0369a1)", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>✈</div>
-          <h1 style={{ margin: "14px 0 4px", color: "#0f172a", fontSize: 24 }}>Aéronautique Casablanca</h1>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>Portail logistique sécurisé</p>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#f8fafc 0%,#eef2f7 100%)", display: "grid", gridTemplateColumns: "minmax(320px, 1.1fr) minmax(320px, .9fr)", fontFamily: "Segoe UI, system-ui, sans-serif" }}>
+      <div style={{ position: "relative", background: "linear-gradient(135deg,#06111f,#0b2a47)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", minHeight: "100vh" }}>
+        <img src={BRAND_BANNER} alt="FIGEAC AERO" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: .42 }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(6,17,31,.76),rgba(6,17,31,.38),rgba(255,115,0,.16))" }} />
+        <div style={{ position: "relative", zIndex: 2, padding: 44, color: "#fff", maxWidth: 620 }}>
+          <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: 2, textTransform: "uppercase", color: "#fb923c", marginBottom: 14 }}>Aerospace Logistics Platform</div>
+          <h1 style={{ fontSize: 46, lineHeight: 1.05, margin: 0, fontWeight: 950 }}>FIGEAC AERO</h1>
+          <p style={{ fontSize: 18, color: "rgba(255,255,255,.82)", lineHeight: 1.6, marginTop: 18 }}>Transport Management System for import/export operations, shipment tracking, audit control and PDF reporting.</p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 28 }}>
+            <span style={{ ...pillStyle, background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.18)" }}>☁ Cloud database</span>
+            <span style={{ ...pillStyle, background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.18)" }}>🔐 Secure access</span>
+            <span style={{ ...pillStyle, background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.18)" }}>📊 Real-time dashboard</span>
+          </div>
         </div>
+      </div>
 
-        <label style={labelStyle}>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="ahmed@transport.com" style={loginInputStyle} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 30 }}>
+        <form onSubmit={login} style={{ width: "min(430px,100%)", background: "#fff", borderRadius: 28, padding: 34, boxShadow: "0 30px 90px rgba(15,23,42,.12)", border: "1px solid #e5e7eb" }}>
+          <div style={{ marginBottom: 24 }}>
+            <img src={BRAND_BANNER} alt="FIGEAC AERO" style={{ width: "100%", height: 74, objectFit: "cover", borderRadius: 18, marginBottom: 18 }} />
+            <h2 style={{ margin: "0 0 6px", color: "#0f172a", fontSize: 26 }}>Welcome back</h2>
+            <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>Sign in to access the transport dashboard.</p>
+          </div>
 
-        <label style={labelStyle}>Password</label>
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••" style={loginInputStyle} />
+          <label style={labelStyle}>Email</label>
+          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="name@figeac-aero.com" style={loginInputStyle} />
 
-        {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: 12, borderRadius: 10, fontSize: 13, marginTop: 12 }}>{error}</div>}
+          <label style={labelStyle}>Password</label>
+          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••" style={loginInputStyle} />
 
-        <button disabled={loading} type="submit" style={{ width: "100%", marginTop: 18, padding: "12px 18px", border: "none", borderRadius: 12, background: loading ? "#94a3b8" : "#1e3a5f", color: "#fff", fontWeight: 800, cursor: loading ? "not-allowed" : "pointer" }}>
-          {loading ? "Signing in..." : "Login"}
-        </button>
+          {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: 12, borderRadius: 12, fontSize: 13, marginTop: 12 }}>{error}</div>}
 
-        <div style={{ marginTop: 18, fontSize: 12, color: "#64748b", background: "#f8fafc", padding: 12, borderRadius: 12 }}>
-          Create users in Firebase Authentication, then create a document in Firestore collection <b>users</b> using the user UID with field <b>role</b>: admin, import, or export.
-        </div>
-      </form>
+          <button disabled={loading} type="submit" style={{ width: "100%", marginTop: 18, padding: "13px 18px", border: "none", borderRadius: 14, background: loading ? "#94a3b8" : "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontWeight: 900, cursor: loading ? "not-allowed" : "pointer", boxShadow: "0 16px 32px rgba(234,88,12,.22)" }}>
+            {loading ? "Signing in..." : "Login"}
+          </button>
+
+          <div style={{ marginTop: 18, fontSize: 12, color: "#64748b", background: "#f8fafc", padding: 12, borderRadius: 12 }}>
+            Access is managed by Firebase Authentication and Firestore roles: admin, import, or export.
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
-
 function Modal({ mode, type, record, onClose, onSave }) {
   const isImport = type === "import";
   const [form, setForm] = useState(record || {
     semaine: "S18",
-    entite: "Aéronautique Casablanca",
+    entite: "FIGEAC AERO",
     fournisseur: FOURNISSEURS[0],
     approvisionneur: APPROVISIONNEURS[0],
     client: CLIENTS[0],
@@ -578,36 +595,73 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], o
 
 function Charts({ imports, exports }) {
   const all = [...imports, ...exports];
-  const statusData = STATUTS.map((s) => ({ name: s, value: all.filter((r) => normalizeStatus(r.statut) === s).length })).filter((d) => d.value > 0);
-  const transportData = TRANSPORTS.map((t) => ({ name: t, Imports: imports.filter((r) => r.typeTransport === t).length, Exports: exports.filter((r) => r.typeTransport === t).length })).filter((d) => d.Imports + d.Exports > 0);
+  const statusDataRaw = TIMELINE_STEPS.map((s) => ({
+    name: s,
+    value: all.filter((r) => normalizeStatus(r.statut) === s).length,
+  })).filter((d) => d.value > 0);
+  const statusData = statusDataRaw.length ? statusDataRaw : [
+    { name: "Créé", value: 1 },
+    { name: "Prêt à expédier", value: 1 },
+    { name: "Expédié", value: 1 },
+    { name: "Douane", value: 1 },
+    { name: "Livré", value: 1 },
+  ];
+
+  const transportRaw = TRANSPORTS.map((t) => ({
+    name: t,
+    Imports: imports.filter((r) => r.typeTransport === t).length,
+    Exports: exports.filter((r) => r.typeTransport === t).length,
+  })).filter((d) => d.Imports + d.Exports > 0);
+  const transportData = transportRaw.length ? transportRaw : [
+    { name: "AERIEN", Imports: 0, Exports: 0 },
+    { name: "Routier", Imports: 0, Exports: 0 },
+    { name: "Maritime", Imports: 0, Exports: 0 },
+    { name: "Express", Imports: 0, Exports: 0 },
+  ];
+  const pieColors = ["#94a3b8", "#1d4ed8", "#f97316", "#7c3aed", "#22c55e"];
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-      <div style={panelStyle}>
-        <h3>Répartition par Statut</h3>
-        <ResponsiveContainer width="100%" height={240}>
-          <PieChart>
-            <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} label>
-              {statusData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+    <>
+      <div className="tm-chart-card">
+        <h3>Répartition par statut</h3>
+        <div className="tm-chart-split">
+          <ResponsiveContainer width="100%" height={230}>
+            <PieChart>
+              <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={54} outerRadius={90} paddingAngle={2}>
+                {statusData.map((_, i) => <Cell key={i} fill={pieColors[i % pieColors.length]} />)}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="tm-chart-legend">
+            {statusData.map((d, i) => (
+              <div key={d.name} className="tm-legend-row">
+                <span className="tm-legend-dot" style={{ background: pieColors[i % pieColors.length] }} />
+                <span>{d.name}</span>
+                <b>{statusDataRaw.length ? d.value : "—"}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+        {!statusDataRaw.length && <div className="tm-empty-note">Ajoutez des opérations pour alimenter ce graphique.</div>}
       </div>
-      <div style={panelStyle}>
-        <h3>Volume par Transport</h3>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={transportData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
+
+      <div className="tm-chart-card">
+        <h3>Volume par transport</h3>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={transportData} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#64748b" }} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="Imports" fill="#1e3a5f" />
-            <Bar dataKey="Exports" fill="#b45309" />
+            <Bar dataKey="Imports" fill="#1d4ed8" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="Exports" fill="#f97316" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+        {!transportRaw.length && <div className="tm-empty-note">Aucune donnée import/export pour le moment.</div>}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -893,160 +947,338 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
     );
   };
 
+  const visibleAlerts = [...imports, ...exports].filter((r) => Number(r.retard) > 0 || r.statutDouane === "Bloqué douane" || r.priorite === "Urgente");
+  const recentShipments = [...imports.map((r) => ({ ...r, direction: "Import" })), ...exports.map((r) => ({ ...r, direction: "Export" }))]
+    .sort((a, b) => String(b.updatedAt?.seconds || b.createdAt?.seconds || b.id).localeCompare(String(a.updatedAt?.seconds || a.createdAt?.seconds || a.id)))
+    .slice(0, 6);
+  const recentHistory = [...history].sort((a, b) => String(b.ts).localeCompare(String(a.ts))).slice(0, 6);
+  const onTimeRate = kpis.total ? Math.round(((kpis.total - kpis.retardes) / kpis.total) * 100) : 0;
+  const avgDelay = (() => {
+    const delayed = [...imports, ...exports].filter((r) => Number(r.retard) > 0);
+    if (!delayed.length) return 0;
+    return (delayed.reduce((sum, r) => sum + Number(r.retard || 0), 0) / delayed.length).toFixed(1);
+  })();
+
+  const pageTitles = {
+    dashboard: ["Tableau de bord", "Vue d’ensemble des opérations de transport"],
+    imports: ["Importations", "Gestion des flux entrants et documents de suivi"],
+    exports: ["Exportations", "Gestion des expéditions client et livraisons"],
+    graphiques: ["Rapports", "Analyse visuelle des volumes, statuts et retards"],
+    alertes: ["Alertes", "Retards, urgences et blocages douaniers"],
+    historique: ["Audit Log", "Traçabilité des actions utilisateurs"],
+  };
+  const [pageTitle, pageSub] = pageTitles[activeTab] || pageTitles.dashboard;
+
+  const navItems = [
+    ["dashboard", "⌂", "Tableau de bord"],
+    ["imports", "⇩", `Importations (${imports.length})`],
+    ["exports", "⇧", `Exportations (${exports.length})`],
+    ["graphiques", "▥", "Rapports"],
+    ["alertes", "!", `Alertes (${visibleAlerts.length})`],
+    ["historique", "☷", `Audit Log (${history.length})`],
+  ];
+
+  const navButton = (key, icon, label) => (
+    <button key={key} onClick={() => setActiveTab(key)} className={`tm-nav-item ${activeTab === key ? "active" : ""}`}>
+      <span className="tm-nav-icon">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+
+  const metricCard = ({ icon, label, value, sub, tone = "blue" }) => (
+    <div className={`tm-metric tm-${tone}`}>
+      <div className="tm-metric-icon">{icon}</div>
+      <div>
+        <div className="tm-metric-label">{label}</div>
+        <div className="tm-metric-value">{value}</div>
+        {sub && <div className="tm-metric-sub">{sub}</div>}
+      </div>
+    </div>
+  );
+
   return (
-    <div style={{ fontFamily: "Segoe UI, system-ui, sans-serif", background: "linear-gradient(135deg,#f8fafc 0%,#eef6fb 48%,#f8fafc 100%)", minHeight: "100vh", color: "#0f172a" }}>
-      <div style={{ background: "linear-gradient(135deg,#06111f 0%,#0f2a44 55%,#1e3a5f 100%)", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 76, boxShadow: "0 14px 40px rgba(15,23,42,.25)", gap: 16, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg,#0f172a,#0369a1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>✈</div>
+    <div className="tm-app">
+      <header className="tm-brand-header">
+        <div className="tm-header-title-wrap">
+          <div className="tm-header-divider" />
+          <div className="tm-brand-header-title">Transport Management System</div>
+        </div>
+
+        <div className="tm-brand-user">
+          <div className="tm-avatar tm-brand-avatar">{(user.email || "A").slice(0, 1).toUpperCase()}</div>
           <div>
-            <div style={{ fontWeight: 900, fontSize: 16, color: "#fff" }}>Aéronautique Casablanca</div>
-            <div style={{ fontSize: 11, color: "#94a3b8" }}>{user.email} · role: {role || "loading"}</div>
+            <div className="tm-brand-user-name">{role === "admin" ? "Admin" : role === "import" ? "Import User" : role === "export" ? "Export User" : "Viewer"}</div>
+            <div className="tm-brand-user-email">{user.email}</div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "all" })} style={{ ...headerBtn, background: "#0369a1" }}>📄 PDF Global</button>
-          <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "delayed" })} style={{ ...headerBtn, background: "#b91c1c" }}>⚠ PDF Retards</button>
-          <button disabled={!canModify(role, "import")} onClick={() => setModal({ mode: "add", type: "import" })} style={{ ...headerBtn, background: canModify(role, "import") ? "#1e3a5f" : "#64748b" }}>＋ Import</button>
-          <button disabled={!canModify(role, "export")} onClick={() => setModal({ mode: "add", type: "export" })} style={{ ...headerBtn, background: canModify(role, "export") ? "#b45309" : "#64748b" }}>＋ Export</button>
-          <button onClick={() => signOut(auth)} style={{ ...headerBtn, background: "#b91c1c" }}>Logout</button>
+      </header>
+      <div className="tm-shell">
+      <style>{`
+        :root { --navy:#07213d; --navy2:#0b3358; --orange:#f97316; --orange2:#ea580c; --soft:#f6f8fb; --line:#e5e7eb; --text:#0f172a; --muted:#64748b; }
+        * { box-sizing: border-box; }
+        html, body, #root { margin:0; padding:0; width:100%; min-height:100%; } body { margin:0; overflow-x:hidden; }
+        .tm-app { min-height:100vh; background:#f5f7fb; color:var(--text); font-family:Segoe UI, system-ui, sans-serif; }
+        .tm-brand-header { height:100px; width:100vw; background-image:linear-gradient(90deg,rgba(6,17,31,.10),rgba(6,17,31,.03),rgba(6,17,31,.16)), url('/figeac-app-header.png'); background-size:100% 100%; background-position:center; background-repeat:no-repeat; border-bottom:4px solid #07213d; display:flex; align-items:center; justify-content:space-between; padding:0 34px; box-shadow:0 2px 18px rgba(15,23,42,.08); }
+        .tm-header-title-wrap { margin-left:385px; display:flex; align-items:center; gap:24px; color:#fff; text-shadow:0 3px 12px rgba(0,0,0,.35); }
+        .tm-header-divider { width:1px; height:48px; background:rgba(255,255,255,.70); }
+        .tm-brand-header-title { font-size:24px; font-weight:900; color:#fff; white-space:nowrap; }
+        .tm-brand-user { display:flex; align-items:center; gap:12px; color:#0b2545; flex-shrink:0; background:rgba(255,255,255,.92); border:1px solid rgba(255,255,255,.65); padding:9px 16px; border-radius:999px; box-shadow:0 10px 28px rgba(15,23,42,.14); backdrop-filter:blur(10px); }
+        .tm-brand-avatar { width:46px; height:46px; background:#08213e; }
+        .tm-brand-user-name { font-weight:950; font-size:17px; }
+        .tm-brand-user-email { font-size:13px; color:#475569; margin-top:2px; }
+        .tm-shell { min-height:calc(100vh - 100px); width:100vw; display:grid; grid-template-columns:220px minmax(0,1fr); background:#f5f7fb; color:var(--text); }
+        .tm-sidebar { background:linear-gradient(180deg,#08213e 0%,#0b355d 72%,#061526 100%); color:#fff; position:sticky; top:0; height:calc(100vh - 100px); display:flex; flex-direction:column; box-shadow:18px 0 50px rgba(2,8,23,.14); z-index:20; }
+        .tm-brand-img { display:none; }
+        .tm-brand-block { padding:24px 18px 20px; border-bottom:1px solid rgba(255,255,255,.10); text-align:center; }
+        .tm-brand-title { font-size:19px; font-weight:950; letter-spacing:.5px; }
+        .tm-brand-sub { color:#cbd5e1; font-size:11px; margin-top:4px; }
+        .tm-nav { padding:16px 12px; display:flex; flex-direction:column; gap:8px; }
+        .tm-nav-item { display:flex; align-items:center; gap:12px; color:#e2e8f0; width:100%; padding:13px 14px; border:none; border-radius:12px; background:transparent; cursor:pointer; font-weight:800; font-size:14px; text-align:left; transition:.18s ease; }
+        .tm-nav-item:hover { background:rgba(255,255,255,.08); transform:translateX(2px); }
+        .tm-nav-item.active { background:linear-gradient(135deg,var(--orange),var(--orange2)); color:#fff; box-shadow:0 12px 28px rgba(249,115,22,.28); }
+        .tm-nav-icon { width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-weight:950; font-size:17px; }
+        .tm-sidebar-footer { margin-top:auto; padding:16px 14px; border-top:1px solid rgba(255,255,255,.12); }
+        .tm-logout { width:100%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:#fff; padding:12px 14px; border-radius:12px; font-weight:900; cursor:pointer; }
+        .tm-main { min-width:0; }
+        .tm-topbar { height:82px; background:rgba(255,255,255,.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 26px; position:sticky; top:0; z-index:10; }
+        .tm-page-title { font-size:25px; font-weight:950; margin:0; }
+        .tm-page-sub { color:var(--muted); font-size:13px; margin-top:4px; }
+        .tm-user { display:none; align-items:center; gap:12px; }
+        .tm-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#1d4ed8,#0f172a); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:950; }
+        .tm-content { padding:18px 24px 28px; width:100%; max-width:none; margin:0; box-sizing:border-box; }
+        .tm-card { background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:0 10px 28px rgba(15,23,42,.06); }
+        .tm-hero { display:none; }
+        .tm-hero-kicker { font-size:12px; font-weight:950; color:var(--orange2); letter-spacing:1.5px; text-transform:uppercase; }
+        .tm-hero h2 { margin:6px 0 6px; font-size:28px; }
+        .tm-hero p { margin:0; color:var(--muted); font-size:14px; }
+        .tm-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+        .tm-btn { border:none; border-radius:12px; padding:11px 14px; font-weight:900; cursor:pointer; display:inline-flex; align-items:center; gap:8px; box-shadow:0 10px 22px rgba(15,23,42,.08); }
+        .tm-btn.orange { background:linear-gradient(135deg,var(--orange),var(--orange2)); color:#fff; }
+        .tm-btn.navy { background:linear-gradient(135deg,#0b3358,#061526); color:#fff; }
+        .tm-btn.white { background:#fff; color:#0f172a; border:1px solid var(--line); }
+        .tm-btn.red { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+        .tm-btn:disabled { background:#e5e7eb !important; color:#94a3b8 !important; cursor:not-allowed; box-shadow:none; }
+        .tm-metrics { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:14px; margin-bottom:18px; }
+        .tm-metric { background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; gap:14px; align-items:center; box-shadow:0 8px 22px rgba(15,23,42,.055); min-height:112px; }
+        .tm-metric-icon { width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+        .tm-blue .tm-metric-icon{background:#dbeafe;color:#1d4ed8}.tm-green .tm-metric-icon{background:#dcfce7;color:#15803d}.tm-orange .tm-metric-icon{background:#ffedd5;color:#ea580c}.tm-purple .tm-metric-icon{background:#f3e8ff;color:#7e22ce}.tm-red .tm-metric-icon{background:#fee2e2;color:#b91c1c}
+        .tm-metric-label { color:#475569; font-weight:800; font-size:13px; }
+        .tm-metric-value { font-size:30px; font-weight:950; margin-top:3px; }
+        .tm-metric-sub { font-size:12px; color:#64748b; margin-top:3px; }
+        .tm-dashboard-main { display:grid; grid-template-columns:minmax(0,2fr) minmax(330px,.95fr); gap:16px; align-items:start; }
+        .tm-charts-area { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .tm-chart-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 10px 28px rgba(15,23,42,.06); min-height:310px; }
+        .tm-chart-card h3 { margin:0 0 12px; font-size:16px; }
+        .tm-chart-split { display:grid; grid-template-columns:minmax(0,1fr) 190px; gap:8px; align-items:center; }
+        .tm-chart-legend { display:flex; flex-direction:column; gap:12px; font-size:13px; color:#475569; }
+        .tm-legend-row { display:grid; grid-template-columns:14px 1fr auto; gap:8px; align-items:center; }
+        .tm-legend-dot { width:12px; height:12px; border-radius:4px; display:inline-block; }
+        .tm-empty-note { margin-top:8px; color:#94a3b8; font-size:12px; text-align:center; }
+        .tm-grid-2 { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; align-items:start; }
+        .tm-panel { background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px; box-shadow:0 10px 28px rgba(15,23,42,.06); }
+        .tm-panel h3 { margin:0 0 14px; font-size:16px; }
+        .tm-list-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #f1f5f9; }
+        .tm-list-row:last-child{border-bottom:none}
+        .tm-list-title { font-weight:900; font-size:13px; }
+        .tm-list-sub { color:#64748b; font-size:12px; margin-top:2px; }
+        .tm-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+        .tm-filter-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(15,23,42,.05); margin-bottom:16px; }
+        @media(max-width:1100px){.tm-brand-header{height:86px;padding:0 18px;background-size:cover;background-position:left center}.tm-header-title-wrap{margin-left:245px;gap:14px}.tm-header-divider{height:38px}.tm-brand-header-title{font-size:18px}.tm-brand-user-email{display:none}.tm-brand-avatar{width:40px;height:40px}.tm-brand-user{padding:8px 12px}.tm-shell{grid-template-columns:1fr;min-height:auto}.tm-sidebar{position:relative;height:auto}.tm-nav{flex-direction:row;overflow:auto}.tm-sidebar-footer{display:none}.tm-metrics{grid-template-columns:repeat(2,1fr)}.tm-grid-2{grid-template-columns:1fr}.tm-dashboard-main{grid-template-columns:1fr}.tm-charts-area{grid-template-columns:1fr}.tm-topbar{position:relative}.tm-brand-img{height:80px}}
+        @media(max-width:700px){.tm-brand-header{height:74px;padding:0 12px;background-size:cover;background-position:left center}.tm-header-title-wrap{margin-left:150px}.tm-header-divider{display:none}.tm-brand-header-title{font-size:13px;max-width:145px;white-space:normal;line-height:1.15}.tm-brand-user{display:none}.tm-content{padding:14px}.tm-topbar{height:auto;padding:16px;align-items:flex-start;gap:12px;flex-direction:column}.tm-metrics{grid-template-columns:1fr}.tm-hero{align-items:flex-start;flex-direction:column}.tm-actions{justify-content:flex-start}.tm-page-title{font-size:22px}}
+      `}</style>
+
+      <aside className="tm-sidebar">
+        <div className="tm-brand-block">
+          <div className="tm-brand-title">FIGEAC AERO</div>
+          <div className="tm-brand-sub">Transport Management System</div>
         </div>
-      </div>
-
-      <div style={{ background: "rgba(255,255,255,.72)", padding: "0 32px", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(226,232,240,.9)", position: "sticky", top: 76, zIndex: 40 }}>
-        <div style={{ display: "flex", gap: 4, padding: "8px 0", overflowX: "auto" }}>
-          {[["dashboard", "📊 Dashboard"], ["imports", `📥 Imports (${imports.length})`], ["exports", `📤 Exports (${exports.length})`], ["graphiques", "📈 Graphiques"], ["alertes", `🚨 Alertes (${kpis.retardes + kpis.douaneBloque})`], ["historique", `🕒 Historique (${history.length})`]].map(([t, l]) => <button key={t} onClick={() => setActiveTab(t)} style={tabStyle(t)}>{l}</button>)}
+        <nav className="tm-nav">{navItems.map(([key, icon, label]) => navButton(key, icon, label))}</nav>
+        <div className="tm-sidebar-footer">
+          <button onClick={() => signOut(auth)} className="tm-logout">⇥ Déconnexion</button>
         </div>
-      </div>
+      </aside>
 
-      <div style={{ padding: "30px 32px" }}>
-        {role === "viewer" && createRoleDocHelp}
-
-        {activeTab === "dashboard" && (
-          <>
-            <div style={{ ...panelStyle, marginBottom: 24, background: "linear-gradient(135deg,#ffffff 0%,#f0f9ff 100%)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 900, color: "#1e3a5f", letterSpacing: 1, textTransform: "uppercase" }}>Centre de contrôle logistique</div>
-                <h2 style={{ margin: "6px 0 4px", fontSize: 26, color: "#0f172a" }}>Bonjour, {user.email}</h2>
-                <div style={{ color: "#64748b", fontSize: 13 }}>Suivi import/export en temps réel · Rapports PDF · Journal d’audit · Cloud sécurisé</div>
-              </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <span style={{ ...pillStyle, background: "#f0f9ff", color: "#1e3a5f" }}>Role: {role}</span>
-                <span style={{ ...pillStyle, background: "#dcfce7", color: "#15803d" }}>Online</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
-              <KpiCard icon="📦" label="Total Shipments" value={kpis.total} sub={`${kpis.imports} imports · ${kpis.exports} exports`} accent="#1e3a5f" />
-              <KpiCard icon="✅" label="Livrés" value={kpis.livres} sub={kpis.total ? `${Math.round((kpis.livres / kpis.total) * 100)}% du total` : "-"} accent="#16a34a" />
-              <KpiCard icon="⚠️" label="En Retard" value={kpis.retardes} sub="Nécessite action" accent="#b91c1c" />
-              <KpiCard icon="🔴" label="Urgents" value={kpis.urgents} sub="Priorité urgente" accent="#b45309" />
-              <KpiCard icon="🛃" label="Bloqués Douane" value={kpis.douaneBloque} sub="Intervention requise" accent="#475569" />
-            </div>
-            <Charts imports={imports} exports={exports} />
-          </>
-        )}
-
-        {activeTab === "imports" && <>{filterBar}{shipmentBulkBar("import", imports, filteredImports, selectedImportRows)}<ShipmentTable rows={filteredImports} type="import" role={role} selectedIds={selectedImports} onToggleSelect={(id) => toggleShipmentSelection("import", id)} onToggleAll={(checked) => toggleAllVisibleShipments("import", filteredImports, checked)} onEdit={(r) => setModal({ mode: "edit", type: "import", record: r })} onDelete={(id) => deleteShipment(id, "import")} /></>}
-        {activeTab === "exports" && <>{filterBar}{shipmentBulkBar("export", exports, filteredExports, selectedExportRows)}<ShipmentTable rows={filteredExports} type="export" role={role} selectedIds={selectedExports} onToggleSelect={(id) => toggleShipmentSelection("export", id)} onToggleAll={(checked) => toggleAllVisibleShipments("export", filteredExports, checked)} onEdit={(r) => setModal({ mode: "edit", type: "export", record: r })} onDelete={(id) => deleteShipment(id, "export")} /></>}
-        {activeTab === "graphiques" && <Charts imports={imports} exports={exports} />}
-
-        {activeTab === "alertes" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {[...imports, ...exports].filter((r) => Number(r.retard) > 0 || r.statutDouane === "Bloqué douane" || r.priorite === "Urgente").map((r) => (
-              <div key={r.id} style={{ ...panelStyle, borderLeft: `4px solid ${Number(r.retard) > 0 ? "#b91c1c" : "#b45309"}` }}>
-                <b>{r.id}</b> — {r.entite} · {r.fournisseur || r.client} · {r.tracking}
-                <div style={{ color: "#64748b", marginTop: 5 }}>Retard: {r.retard} jours · Douane: {r.statutDouane} · Priorité: {r.priorite}</div>
-              </div>
-            ))}
+      <main className="tm-main">
+        <header className="tm-topbar">
+          <div>
+            <h1 className="tm-page-title">{pageTitle}</h1>
+            <div className="tm-page-sub">{pageSub}</div>
           </div>
-        )}
+          <div className="tm-user">
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontWeight: 950 }}>{role === "admin" ? "Admin" : role === "import" ? "Import User" : role === "export" ? "Export User" : "Viewer"}</div>
+              <div style={{ color: "#64748b", fontSize: 12 }}>{user.email}</div>
+            </div>
+            <div className="tm-avatar">{(user.email || "U").slice(0, 1).toUpperCase()}</div>
+          </div>
+        </header>
 
-        {activeTab === "historique" && (
-          <div style={panelStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <h3 style={{ marginTop: 0 }}>🕒 Audit Log</h3>
-                <p style={{ color: "#64748b", marginTop: -8 }}>Tracks who changed shipments, when, and exactly what fields changed.</p>
-              </div>
-              {role === "admin" && (
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    onClick={deleteSelectedHistory}
-                    disabled={!selectedHistory.length}
-                    style={{
-                      ...secondaryBtn,
-                      background: selectedHistory.length ? "#fee2e2" : "#f1f5f9",
-                      color: selectedHistory.length ? "#b91c1c" : "#94a3b8",
-                      cursor: selectedHistory.length ? "pointer" : "not-allowed",
-                      borderColor: selectedHistory.length ? "#fecaca" : "#e2e8f0",
-                    }}
-                  >
-                    🗑 Delete Selected ({selectedHistory.length})
-                  </button>
-                  <button
-                    onClick={clearHistory}
-                    disabled={!history.length}
-                    style={{
-                      ...secondaryBtn,
-                      background: history.length ? "#fff7ed" : "#f1f5f9",
-                      color: history.length ? "#c2410c" : "#94a3b8",
-                      cursor: history.length ? "pointer" : "not-allowed",
-                      borderColor: history.length ? "#fed7aa" : "#e2e8f0",
-                    }}
-                  >
-                    🧹 Clear All History
-                  </button>
+        <section className="tm-content">
+          {role === "viewer" && createRoleDocHelp}
+
+          {activeTab === "dashboard" && (
+            <>
+              <div className="tm-hero">
+                <div>
+                  <div className="tm-hero-kicker">Operations Control Center</div>
+                  <h2>Transport Management System</h2>
+                  <p>Real-time import/export tracking, audit control, PDF reports and secure role-based collaboration.</p>
                 </div>
-              )}
-            </div>
-            {history.length === 0 && (
-              <div style={{ padding: 20, background: "#f8fafc", borderRadius: 14, color: "#64748b" }}>
-                No audit history records.
+                <div className="tm-actions">
+                  <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "all" })} className="tm-btn white">📄 PDF Global</button>
+                  <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "delayed" })} className="tm-btn red">⚠ PDF Retards</button>
+                  <button disabled={!canModify(role, "import")} onClick={() => setModal({ mode: "add", type: "import" })} className="tm-btn navy">＋ Import</button>
+                  <button disabled={!canModify(role, "export")} onClick={() => setModal({ mode: "add", type: "export" })} className="tm-btn orange">＋ Export</button>
+                </div>
               </div>
-            )}
-            {[...history].sort((a, b) => String(b.ts).localeCompare(String(a.ts))).map((h) => (
-              <div key={h.firebaseId} style={{ padding: 14, background: "#f8fafc", borderRadius: 12, marginBottom: 12, borderLeft: `4px solid ${h.action === "Ajout" ? "#16a34a" : h.action === "Suppression" ? "#b91c1c" : "#3b82f6"}` }}>
+
+              <div className="tm-metrics">
+                {metricCard({ icon: "⇩", label: "Importations", value: kpis.imports, sub: `${kpis.total} opérations au total`, tone: "blue" })}
+                {metricCard({ icon: "⇧", label: "Exportations", value: kpis.exports, sub: "Flux sortants", tone: "orange" })}
+                {metricCard({ icon: "✓", label: "Livrées", value: kpis.livres, sub: `${onTimeRate}% on-time rate`, tone: "green" })}
+                {metricCard({ icon: "!", label: "Retards", value: kpis.retardes, sub: `Moyenne: ${avgDelay} j`, tone: "red" })}
+                {metricCard({ icon: "▣", label: "Douane", value: kpis.douaneBloque, sub: "Blocages actifs", tone: "purple" })}
+              </div>
+
+              <div className="tm-dashboard-main">
+                <div className="tm-charts-area"><Charts imports={imports} exports={exports} /></div>
+                <div className="tm-panel tm-activity-card">
+                  <h3>Activité récente</h3>
+                  {recentHistory.length === 0 && <div style={{ color: "#64748b" }}>Aucune activité récente.</div>}
+                  {recentHistory.map((h) => (
+                    <div key={h.firebaseId} className="tm-list-row">
+                      <div>
+                        <div className="tm-list-title">{h.action} · {h.direction} {h.id}</div>
+                        <div className="tm-list-sub">{h.userEmail} · {h.ts}</div>
+                      </div>
+                      <Badge label={h.action} {...(h.action === "Suppression" ? STATUS_COLORS.Bloqué : h.action === "Ajout" ? STATUS_COLORS.Livré : STATUS_COLORS.Expédié)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="tm-panel" style={{ marginTop: 18 }}>
+                <h3>Dernières opérations</h3>
+                {recentShipments.length === 0 && <div style={{ color: "#64748b" }}>Aucune opération récente.</div>}
+                {recentShipments.map((r) => (
+                  <div key={`${r.direction}-${r.id}`} className="tm-list-row">
+                    <div>
+                      <div className="tm-list-title">{r.id} · {r.direction}</div>
+                      <div className="tm-list-sub">{r.fournisseur || r.client || "—"} · {r.transporteur || "—"} · {r.tracking || "—"}</div>
+                    </div>
+                    <Badge label={r.statut || "Créé"} {...(STATUS_COLORS[r.statut] || STATUS_COLORS[normalizeStatus(r.statut)] || STATUS_COLORS["Créé"])} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === "imports" && (
+            <>
+              <div className="tm-toolbar">
+                <div><h2 style={{ margin: 0 }}>Importations</h2><div style={{ color: "#64748b", fontSize: 13 }}>Gestion des shipments import</div></div>
+                <div className="tm-actions">
+                  <button onClick={() => generatePdfReport({ imports: filteredImports, exports: [], user, reportType: "imports" })} className="tm-btn white">📄 Exporter PDF</button>
+                  <button disabled={!canModify(role, "import")} onClick={() => setModal({ mode: "add", type: "import" })} className="tm-btn navy">＋ Nouvelle Importation</button>
+                </div>
+              </div>
+              <div className="tm-filter-card">{filterBar}</div>
+              {shipmentBulkBar("import", imports, filteredImports, selectedImportRows)}
+              <ShipmentTable rows={filteredImports} type="import" role={role} selectedIds={selectedImports} onToggleSelect={(id) => toggleShipmentSelection("import", id)} onToggleAll={(checked) => toggleAllVisibleShipments("import", filteredImports, checked)} onEdit={(r) => setModal({ mode: "edit", type: "import", record: r })} onDelete={(id) => deleteShipment(id, "import")} />
+            </>
+          )}
+
+          {activeTab === "exports" && (
+            <>
+              <div className="tm-toolbar">
+                <div><h2 style={{ margin: 0 }}>Exportations</h2><div style={{ color: "#64748b", fontSize: 13 }}>Gestion des shipments export</div></div>
+                <div className="tm-actions">
+                  <button onClick={() => generatePdfReport({ imports: [], exports: filteredExports, user, reportType: "exports" })} className="tm-btn white">📄 Exporter PDF</button>
+                  <button disabled={!canModify(role, "export")} onClick={() => setModal({ mode: "add", type: "export" })} className="tm-btn orange">＋ Nouvelle Exportation</button>
+                </div>
+              </div>
+              <div className="tm-filter-card">{filterBar}</div>
+              {shipmentBulkBar("export", exports, filteredExports, selectedExportRows)}
+              <ShipmentTable rows={filteredExports} type="export" role={role} selectedIds={selectedExports} onToggleSelect={(id) => toggleShipmentSelection("export", id)} onToggleAll={(checked) => toggleAllVisibleShipments("export", filteredExports, checked)} onEdit={(r) => setModal({ mode: "edit", type: "export", record: r })} onDelete={(id) => deleteShipment(id, "export")} />
+            </>
+          )}
+
+          {activeTab === "graphiques" && (
+            <>
+              <div className="tm-toolbar">
+                <div><h2 style={{ margin: 0 }}>Rapports & Analyse</h2><div style={{ color: "#64748b", fontSize: 13 }}>Indicateurs opérationnels et export PDF</div></div>
+                <div className="tm-actions">
+                  <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "all" })} className="tm-btn white">📄 PDF Global</button>
+                  <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "delayed" })} className="tm-btn red">⚠ PDF Retards</button>
+                </div>
+              </div>
+              <Charts imports={imports} exports={exports} />
+            </>
+          )}
+
+          {activeTab === "alertes" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {visibleAlerts.length === 0 && <div className="tm-panel" style={{ color: "#64748b" }}>Aucune alerte active.</div>}
+              {visibleAlerts.map((r) => (
+                <div key={r.id} className="tm-panel" style={{ borderLeft: `4px solid ${Number(r.retard) > 0 ? "#b91c1c" : "#f97316"}` }}>
+                  <b>{r.id}</b> — {r.entite} · {r.fournisseur || r.client} · {r.tracking}
+                  <div style={{ color: "#64748b", marginTop: 5 }}>Retard: {r.retard} jours · Douane: {r.statutDouane} · Priorité: {r.priorite}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "historique" && (
+            <div className="tm-panel">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <h3 style={{ marginTop: 0 }}>Audit Log</h3>
+                  <p style={{ color: "#64748b", marginTop: -8 }}>Tracks who changed shipments, when, and exactly what fields changed.</p>
+                </div>
                 {role === "admin" && (
-                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: "#64748b", marginBottom: 8 }}>
-                    <input type="checkbox" checked={selectedHistory.includes(h.firebaseId)} onChange={() => toggleHistorySelection(h.firebaseId)} />
-                    Select log
-                  </label>
-                )}
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div><b>{h.action}</b> [{h.direction}] {h.id} — {h.label}</div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>{h.ts}</div>
-                </div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>User: {h.userEmail}</div>
-                {h.detail && <div style={{ fontSize: 12, color: "#475569", marginTop: 6 }}>{h.detail}</div>}
-                {Array.isArray(h.changes) && h.changes.length > 0 && (
-                  <div style={{ marginTop: 10, overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ background: "#e2e8f0" }}>
-                          <th style={{ textAlign: "left", padding: 8 }}>Field</th>
-                          <th style={{ textAlign: "left", padding: 8 }}>Before</th>
-                          <th style={{ textAlign: "left", padding: 8 }}>After</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {h.changes.slice(0, 8).map((c, i) => (
-                          <tr key={`${c.field}-${i}`}>
-                            <td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", fontWeight: 700 }}>{c.field}</td>
-                            <td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", color: "#b91c1c" }}>{c.before || "—"}</td>
-                            <td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", color: "#16a34a" }}>{c.after || "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {h.changes.length > 8 && <div style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}>+{h.changes.length - 8} more changes</div>}
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <button onClick={deleteSelectedHistory} disabled={!selectedHistory.length} className="tm-btn red">🗑 Delete Selected ({selectedHistory.length})</button>
+                    <button onClick={clearHistory} disabled={!history.length} className="tm-btn white">🧹 Clear All History</button>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              {history.length === 0 && <div style={{ padding: 20, background: "#f8fafc", borderRadius: 14, color: "#64748b" }}>No audit history records.</div>}
+              {[...history].sort((a, b) => String(b.ts).localeCompare(String(a.ts))).map((h) => (
+                <div key={h.firebaseId} style={{ padding: 14, background: "#f8fafc", borderRadius: 12, marginBottom: 12, borderLeft: `4px solid ${h.action === "Ajout" ? "#16a34a" : h.action === "Suppression" ? "#b91c1c" : "#3b82f6"}` }}>
+                  {role === "admin" && (
+                    <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                      <input type="checkbox" checked={selectedHistory.includes(h.firebaseId)} onChange={() => toggleHistorySelection(h.firebaseId)} />
+                      Select log
+                    </label>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                    <div><b>{h.action}</b> [{h.direction}] {h.id} — {h.label}</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{h.ts}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>User: {h.userEmail}</div>
+                  {h.detail && <div style={{ fontSize: 12, color: "#475569", marginTop: 6 }}>{h.detail}</div>}
+                  {Array.isArray(h.changes) && h.changes.length > 0 && (
+                    <div style={{ marginTop: 10, overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                        <thead><tr style={{ background: "#e2e8f0" }}><th style={{ textAlign: "left", padding: 8 }}>Field</th><th style={{ textAlign: "left", padding: 8 }}>Before</th><th style={{ textAlign: "left", padding: 8 }}>After</th></tr></thead>
+                        <tbody>
+                          {h.changes.slice(0, 8).map((c, i) => (
+                            <tr key={`${c.field}-${i}`}><td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", fontWeight: 700 }}>{c.field}</td><td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", color: "#b91c1c" }}>{c.before || "—"}</td><td style={{ padding: 8, borderBottom: "1px solid #e2e8f0", color: "#16a34a" }}>{c.after || "—"}</td></tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {h.changes.length > 8 && <div style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}>+{h.changes.length - 8} more changes</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
 
       {modal && <Modal mode={modal.mode} type={modal.type} record={modal.record} onClose={() => setModal(null)} onSave={saveShipment} />}
+      </div>
     </div>
   );
 }
