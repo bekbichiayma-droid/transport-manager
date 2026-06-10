@@ -58,12 +58,407 @@ const STATUTS = [...TIMELINE_STEPS, "Bloqué", "Annulé"];
 const TRANSPORTS = ["AERIEN", "Routier", "Maritime", "Express"];
 const PRIORITES = ["Normale", "Haute", "Urgente"];
 const DOUANE = ["N/A", "En cours", "Dédouané", "Bloqué douane"];
-const ENTITES = ["FIGEAC AERO", "Figeacaero", "Autre"];
-const SEMAINES = ["S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20"];
+const ENTITES = ["FIGEAC AERO", "Casablanca Aéronautique", "Autre"];
 
 // Change these lists any time you want.
-const FOURNISSEURS = ["SNAA", "Mecaprotec", "Thales", "Safran", "Airbus", "Autre"];
-const CLIENTS = ["AirBus MONTOIR", "Safran CRAMAYEL", "Picardie", "Boeing", "Autre"];
+const FOURNISSEURS = ["AUVERGNE AERONAUTIQUE",
+"FARO EUROPE GMBH & CO. KG",
+"PPG AEROSPACE",
+"ACCEL",
+"ANAL",
+"AMPERE INDUSTRIE S.A.S",
+"ANFRAY - LE HAVRE",
+"ASTHEO TECHNOLOGIES",
+"SCEI - BEZY",
+"BOREL FRANCE SAS",
+"BOUTMY SA",
+"BRENNTAG",
+"BROSSES DE METALLISATION PYRENEES",
+
+"CORELEC",
+"COURBIS",
+"LE CRENEAU INDUSTRIEL",
+"CREUZET AERONAUTIQUE",
+"DASSAULT AVIATION FALCON SPARES",
+"DELTECH",
+"LABORATOIRE ECCI",
+"ETUDE CONCEPTION OUTILLAGE TRAITEMENT",
+"ERICHSEN",
+"GACHES CHIMIE SPECIALITES",
+"GANTOIS INDUSTRIES SAS",
+"SOCIETE HUMEAU",
+"JEAN BREL",
+"BARAT LHOTELLIER",
+"L'HOTELLIER - UTC AEROSPACE SYSTEMS",
+"DAHER AEROSPACE - INDUSTRIE",
+"RESSORTS MASSELIN",
+"MCA NUMRIC",
+"MECALASER",
+"OVIO INSTRUMENTS",
+"PAULSTRA SNC",
+"SATAIR FRANCE",
+"SERVICE CENTRE AERO",
+"SERVI MECA",
+"SHERWIN BABB CO",
+"SLETI",
+"SOLSI-TEC",
+"THYSSENKRUPP MATERIALS <FRANCE>",
+"INTERTURBINE AVIATION LOGISTICS GMBH",
+"VINK FRANCE",
+"YELLOZ COMPONENTS",
+"PAOLO ASTORI SPA",
+"KATTAN AEROSERVICES",
+"RUBAN DE NORMANDIE",
+"TRISTONE FLOWTECH FRANCE",
+"UAC EUROPE SRL",
+"AKZO NOBEL AEROSPACE COATINGS BV",
+"ALL METAL SERVICES LTD",
+"ALCAN CMIC",
+"AERO NEGOCE INTERNATIONAL",
+"ARESLASER S.A.S",
+"ARM",
+"SHERWIN BABB CO",
+"BVQI FRANCE",
+"C.B.A.",
+"PPG COATING S.A.",
+"PTP",
+"COMPTOIR GENERAL DES METAUX",
+"COMPTOIR  GENERAL DU RESSORT",
+"CORSE COMPOSITE AERONAUTIQUE",
+"JPR",
+"JV COATING",
+"EJM",
+"L'ELECTROLYSE",
+"EQUIPEMENTS SPECIAUX POUR L'AVIATION",
+"ANIXTER FRANCE",
+"ALCOA FASTENING SYSTEMS",
+"HAVER & BOECKER OHG",
+"INDRAERO - SIREN",
+"JACOTTET INDUSTRIE",
+"JAVAUX",
+"KDI KMS AERO",
+"LAMECO",
+"LPO",
+"MANKIEWICZ FRANCE",
+"MAPAERO S.A.",
+"MECAPROTEC",
+"MOULAGE PLASTIQUE DU MIDI",
+"OCCITANIE PLASTIQUES",
+"OXYGRAVURE",
+"INCORA",
+"P.M.A",
+"POLYSPACE TRELLEBORG",      
+"PSD ACIERS",
+"ROSLER-FRANCE",
+"S.E.E.",
+"SMN",
+"SNECMA",
+"SOCOMOR",  
+"SOFRANEL",
+"SPECITUBES",
+"CASTLE METALS FRANCE",
+"TW.METALS",
+"VARENNE ", 
+"LE VULCAIN",
+"WEBER METAUX",
+"ADHETEC",
+"NYCO",
+"AIRCELLE LE HAVRE",
+"SIMAIR",
+"CMP SAS GROUPE B/E AEROSPACE",
+"E.S.M.",
+"HOWMET AEROSPACE",
+"MAP COATING",
+"EADS COMPOSITE AQUITAINE",
+"ETS SOMECO",
+"CONSTELLIUM AVIATBE",
+"MPQ ELECTRONIQUE",
+"SONACA ENGINEERING SERVICES",
+"MECANUMERIC",
+"AUBRY-NTV",
+"SOCIETE SPECIALISTE DE SOUDAGE",
+"PAINT SERVICES  GROUP LTD",
+"3P PERFORMANCE PLASTICS PRODUCTS",
+"TRIUMPH CONTROLS FRANCE",
+"SABCA",
+"AUVERGNE AERONAUTIQUE GROUPE",
+"EUROCOPTER",
+"AIR COST CONTROL",
+"PIRAMIDE",
+"APPLUS + LABORATORIES",
+"LISI FRANCE",
+"CMP SAS GROUPE B/E AEROSPACE",
+"OMYA SAS",
+"TESTWELL S.A.S",
+"TIMET SAVOIE SERVICE CENTER",
+"STARPLAST",
+"TEAM PLASTIQUE",
+"BRANT INDUSTRIE",
+"EADS SOGERMA",
+"VEREINIGTE ELEKTRONIKWERKSTATTEN GMBH",
+"ALIGN AEROSPACE",
+"ATELIERS DE LA HAUTE GARONNE",
+"SREM TECHNOLOGIES",
+"RUBIX FRANCE",
+"AALBERTS SURFACE TREATMENT",
+"MESURE",
+"EUROP3D",
+"FIT - ESIC",
+"CETIM FRANCE",
+"RAPID TIMBRE",
+"AEROLIA SAS AH 34287450",
+"EDMOND ALLAIN & SUCCESSEURS",
+"REHAU SA",
+"AIRBUS HELICOPTERS",
+"NUM SAS",
+" SODIP",
+"ACORE INDUSTRIE",
+"SONACA",
+"3P PERFORMANCE PLASTICS PRODUCTS",
+"C.M.I.C",
+"AREF",
+"SLTS",
+"GRAVOTECH MARKING",
+"FORTERRO FRANCE",
+"STELIA AEROSPACE TOULOUSE",
+"LE JOINT FRANÇAIS",
+"AIRBUS GMBH",
+"CADNUM",
+"CENTRO DE ANÁLISIS AGROPECUARIOS",
+"ON.ING.SARL",
+"SEALANTS EUROPE SAS",
+"FIGEAC AERO AUXERRE",
+"WULFMEYER AIRCRAFT INTERIOR",
+"STELIA AEROSPACE COMPOSITES",
+"ABICOM INFORMATIQUE",
+"MECAHERS",
+"STEN",
+"RS BEFI",
+"TURCO ESPAÑOLA, S.A.",
+"FRANCE MAROC MANTENANCE",
+"ATELIERS LE MAUFF S.A.S",
+"SAFRAN NACELLE LE HAVRE",
+"FIGEAC AERO",
+"STELIA AEROSPACE (STNZ)",
+"ECKO TECH",
+"HG AEROSPACE ENGINEERING LTD",
+"ARENIUS TESTS ET ESSAIS INDUSTRIELS",
+"STRUCTIL  SAFRAN",
+"CONSTELLIUM",
+"PORTELLI PRODUCTIONS",
+"VWR INTERNATIONAL S.A.S",
+"NORELEM",
+"MECABRIVE INDUSTRIES",
+"FIGEAC AÉRO TUNISIE",
+"DOSAGE 2000",
+"ATEMA",
+"ACTEMIUM",
+"VERO SOFTWARE",
+"SN AUVERGNE AERONAUTIQUE",
+"INGENIERIE.CHAUDRONERIE.AERONAUTIQUE",
+" AIRBUS ATLANTIC",
+"BERGERET JEANNET",
+"BUREAU VERITAS",
+"FREUDENBERG",
+"LVD S.A",
+"SMN",
+"HOFFMANN GROUP",
+"MANUFACTURING PROCESS SPECIFICATION",
+"TITANIA, ENSAYOS Y PROYECTOS IND. S.L.",
+"SPECITUBES S.A.S",
+"AGILEA CONSIEL",
+"NU-PRO LIMITED TS",
+"SCEI SAS",
+"WHITFORD-LTD",
+"STELIA AEROSPACE SKY PARK BUILDING",
+"COMPOSITES DISTRIBUTION",
+"ALMA",
+"GARDCO",
+"SASU IMSC, INDUSTRIE",
+"SMITHS METAL CENTRES",
+"TRADE ADVERTISING SERVICES LTD",
+"SIL-MID LTD",
+"AMADA",
+"ANALYSES SUFACE",
+"INTEC.AIR",
+"IPS LASER",
+"TWINBIN HURST GREEN PLASTICS LTD",
+"LAFI",
+"E.R.P.O.",
+"BOSSARD AEROSPACE",
+"MÉCANIQUE DE PRÉCISION",
+"ROLHION ET CIE SA",
+"HOWMET AEROSPACE",
+"BALTEAU NDT",
+"SOCLAM",
+"ILP LASER",
+"SPI AERO",
+"HUTCHINSON",
+"AQMO-ISSA",
+"OTTO FUCHS",
+"TRATAMIENTOS TÉRMICOS TTT, S.A",
+"PFW AEROSPACE GMBH",
+"MERCK CHIMIE S.A.S.",
+"AGICOM",
+"TEBALDI EURL",
+"TESTIA FRANCE",
+"AERO METALLIC",
+"FERONYL",
+"SAFRAN AIRCRAFT ENGINES",
+"CENTRE DE VERIFICATION DE METZ",
+"SPITFIRE",
+"KASTENS & KNAUER GMBH & CO. INTERNATIONA",
+"ATI METALS",
+"NORMADOC",
+"AEROMETALS & ALLOYS",
+"ARRK SHAPERS FRANCE",
+"BOLLHOFF GILLIS",
+"MEGGER",
+"BODO MOLLER CHEMIE",
+"INTEGRA SYSTEME",
+"EYRAUD SAS",
+"DIS RELAITING SOLUTIONS",
+"SFS INTEC GMBH",
+"ALERIS ROLLED PRODUCTS",
+"BARCELONES DE DROGAS Y PRODUCTOS QUIMICO",
+"MABEO INDUSTRIE",
+"SCC",
+"PRECITEC",
+"ADMI INDUSTRIE (GROUPE MACMAS)",
+"GAZC",
+"SGS FRANCE - LABORATOIRE D'ESSAIS / TEST",
+"AVIATEC GLOBAL AVIATION",
+"INFORMATIQUE MAINTENANCE SERVICES",
+"SOCAT",
+"METAVIA BRAMI",
+"HAYNES INTERNATIONAL SARL",
+"CIN MONOPOL SAS",
+"FUNDACION CENTRO TECNOLOGICO DE MIRANDA",
+"PRIMES GMBH",
+"INTEC AIR SL",
+"AFNOR CERTIFICATION",
+"AUBERT & DUVAL",
+"AEROSPACE METAL FINISHERS",
+"ELEMENT MATERIALS TECHNOLOGY",
+"BARTHELEMY",
+"SELECTARC",
+"NEXAM",
+"AOS FRANCE",
+"WOLFRAM- INDUSTRIE MBH",
+"NIMROD AEROSTRUCTURES",
+"ALA FRANCE",
+"AB SERVE",
+"MAKINO SAS",
+"BET CEI",
+"SOGEMA",
+"WENZEL",
+"TECHNIFILTRE",
+"RENISHAW",
+"ZOLLER",
+"HUTCHINSON",
+"FM2I",
+"UNCETA",
+"SHYMAT",
+"GALVATEC",
+"MANUTAN SA",
+"SFH",
+"NEUJKF",
+"METROLOGIC GROUP S.A.S",
+"SETAM",
+"CNDT SOLUTION",
+"HAAS-SUDFRANCE",
+"INTECH AUTOMAZIONE SRL",
+"MGP LACAN",
+"SCHUNK INTEC",
+"KLEENEZE KOTI LIMITED",
+"ADDEV MATERIALS AEROSPACE SAS",
+"THERMIDOR",
+"JACOMEX",
+"EGCI",
+"WALTER FRANCE SAS",
+"APOLLO AEROSPACE COMPONENTS",
+"P.M. TITANIO S.R.L.",
+"SCHILTZ",
+"MICROPULSE PLATING CONCEPTS",
+"BOURDIN SARL",
+"SAS AIR FORMATION",
+"HEXAGON METROLOGY SAS",
+"MAPAL FRANCE",
+"ARKANIA GROUP",
+"HOWMET AEROSPACE",
+"HOWMET AEROSPACE",
+"EYNARD ROBIN",
+"CINCINNATIVR",
+"MULTISTATION",
+"MACH AERO",
+"SWIFT AEROSPACE FRANCE",
+"GMAPSA",
+"BSI",
+"FORAMAG",
+"CGRS",
+"SEBIM",
+"AEROCOM METALS LTD.",
+"ECHOLINE",
+"AVIATUBE",
+"CGR LPI",
+"MP USICAP",
+"SMAC",
+"RECAERO",
+"IBAG HSC TECHNOLOGY",
+"AEROTRADE",
+"ACCESSOIRES MATÉRIELS DIFFUSION SERVICES",
+"JOUANIN-MARCHAND",
+"SAT EQUIPEMENTS THERMIQUES INDUSTRIELS",
+"SMOT 47",
+"SANDVIK TOOLING",
+"MMC METAL FRANCE",
+"AEROLEAN SUPPLY",
+"S+D METALS GMBH",
+"SUPRAERO",
+"NEHLSEN-BWB FLUGZEUG-GALVANIK DRESDEN",
+"NMB MINEBEA SARL",
+"TECHNICIS",
+"SIEBEC",
+"ALUMINIUMWERK UNNA AG",
+"ELCO",
+"AIR COST CONTROL",
+"ALL METAL SERVICES LTD",
+"ALLIANCE AUTOMOTIVE GRAND SUD",
+"SKILL PARTNER BORDEAUX",
+"DEVATECH",
+"AFNOR COMPETENCES",
+"SMITHS ADVANCED METALS",
+"MECANUMERIC INDUSTRIES SAS",
+"TRANSTEC MACHINES OUTILS",
+"KENNAMETAL FRANCE SAS",
+"PRECISE FRANCE",
+"STAR PROGETTI",
+"AAF FRANCE SAS",];
+const CLIENTS = ["ABIPA",
+"AirBus Blondel",
+"AirBus MERIGNAC",
+"AirBus MONTOIR",
+"Airbus Rochefort",
+"Airbus st Nazaire",
+"AIRBUS TUNISIE",
+"CANAGROSA",
+"CREUZET" ,
+"DMG MORI",
+"Figeac France",
+"Figeac Tunisie",
+"HEXAGON METROLOGY",
+"IDEA LOGISTIQUE", 
+"MECABRIVE",
+"PFW AEROSPACE",
+"PICARDIE",
+"PORTELLI",
+"PSD",
+"RF",
+"Safran  Cramayel",
+"Safran  EVERY",
+"SN Auvergne",
+];
+
 const APPROVISIONNEURS = ["Yassmin El Fathani", "Fatiha ET-TAGRY", "Ahmed Benzari", "Autre"];
 const CHARGES_AFFAIRE = ["Ahmed Benzari", "Karim El Amrani", "Sara Alaoui", "Autre"];
 const TRANSPORTEURS = ["Chronopost", "Dachser", "DHL", "FedEx", "UPS", "Autre"];
@@ -136,7 +531,6 @@ function getTimelineIndex(status) {
 }
 
 const AUDIT_FIELDS = [
-  "semaine",
   "entite",
   "fournisseur",
   "approvisionneur",
@@ -196,7 +590,7 @@ function buildReportRows(rows, direction) {
   return rows.map((r) => [
     direction,
     r.id || "—",
-    r.semaine || "—",
+    formatDateForReport(r.dateDemande),
     r.entite || "—",
     direction === "Import" ? (r.fournisseur || "—") : (r.client || "—"),
     r.typeTransport || "—",
@@ -277,7 +671,7 @@ function generatePdfReport({ imports, exports, user, reportType = "all" }) {
 
   autoTable(docPdf, {
     startY: docPdf.lastAutoTable.finalY + 10,
-    head: [["Direction", "ID", "Semaine", "Entité", "Fournisseur/Client", "Transport", "Transporteur", "Tracking", "Expédition", "Prévue", "Livraison", "Retard", "Statut", "Priorité", "Douane"]],
+    head: [["Direction", "ID", "Date demande", "Entité", "Fournisseur/Client", "Transport", "Transporteur", "Tracking", "Expédition", "Prévue", "Livraison", "Retard", "Statut", "Priorité", "Douane"]],
     body: body.length ? body : [["—", "Aucune donnée", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—"]],
     styles: { fontSize: 7, cellPadding: 2, overflow: "linebreak" },
     headStyles: { fillColor: [15, 23, 42], textColor: 255 },
@@ -422,17 +816,20 @@ function LoginScreen() {
     </div>
   );
 }
-function Modal({ mode, type, record, onClose, onSave }) {
+function Modal({ mode, type, record, onClose, onSave, masterData }) {
   const isImport = type === "import";
+  const fournisseursList = masterData?.fournisseurs?.length ? masterData.fournisseurs : FOURNISSEURS;
+  const clientsList = masterData?.clients?.length ? masterData.clients : CLIENTS;
+  const transporteursList = masterData?.transporteurs?.length ? masterData.transporteurs : TRANSPORTEURS;
+  const entitesList = masterData?.entites?.length ? masterData.entites : ENTITES;
   const [form, setForm] = useState(record || {
-    semaine: "S18",
-    entite: "FIGEAC AERO",
-    fournisseur: FOURNISSEURS[0],
+    entite: entitesList[0] || "FIGEAC AERO",
+    fournisseur: fournisseursList[0] || "Autre",
     approvisionneur: APPROVISIONNEURS[0],
-    client: CLIENTS[0],
+    client: clientsList[0] || "Autre",
     chargeAffaire: CHARGES_AFFAIRE[0],
     typeTransport: "Routier",
-    transporteur: TRANSPORTEURS[0],
+    transporteur: transporteursList[0] || "Autre",
     tracking: "",
     dateDemande: today(),
     dateEnlevement: "",
@@ -496,11 +893,10 @@ function Modal({ mode, type, record, onClose, onSave }) {
         </div>
 
         <div style={{ padding: 28, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          {field("Semaine", "semaine", "text", SEMAINES)}
-          {field("Entité", "entite", "text", ENTITES)}
-          {isImport ? <>{field("Fournisseur", "fournisseur", "text", FOURNISSEURS)}{field("Approvisionneur", "approvisionneur", "text", APPROVISIONNEURS)}</> : <>{field("Client", "client", "text", CLIENTS)}{field("Chargé d'affaire", "chargeAffaire", "text", CHARGES_AFFAIRE)}</>}
+          {field("Entité", "entite", "text", entitesList)}
+          {isImport ? <>{field("Fournisseur", "fournisseur", "text", fournisseursList)}{field("Approvisionneur", "approvisionneur", "text", APPROVISIONNEURS)}</> : <>{field("Client", "client", "text", clientsList)}{field("Chargé d'affaire", "chargeAffaire", "text", CHARGES_AFFAIRE)}</>}
           {field("Type de transport", "typeTransport", "text", TRANSPORTS)}
-          {field("Transporteur", "transporteur", "text", TRANSPORTEURS)}
+          {field("Transporteur", "transporteur", "text", transporteursList)}
           {field("N° Tracking", "tracking")}
           {field("Type Marchandise", "typeMarchandise", "text", MARCHANDISES)}
           {field("Priorité", "priorite", "text", PRIORITES)}
@@ -531,7 +927,7 @@ function Modal({ mode, type, record, onClose, onSave }) {
 function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleAll }) {
   const isImport = type === "import";
   const allowed = canModify(role, type);
-  const cols = ["", "Semaine", "Entité", isImport ? "Fournisseur" : "Client", "Transport", "Tracking", "Exp.", "Prévue", "Livraison", "Retard", "Statut", "Douane", "Actions"];
+  const cols = ["", "Date demande", "Entité", isImport ? "Fournisseur" : "Client", "Transport", "Tracking", "Exp.", "Prévue", "Livraison", "Retard", "Statut", "Douane", "Actions"];
   const allChecked = allowed && rows.length > 0 && rows.every((r) => selectedIds.includes(r.id));
   return (
     <div style={{ overflowX: "auto", borderRadius: 22, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 16px 36px rgba(15,23,42,.06)" }}>
@@ -569,7 +965,7 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], o
                     title="Select this shipment"
                   />
                 </td>
-                <td style={td}><b>{row.semaine}</b></td>
+                <td style={td}><b>{row.dateDemande || "—"}</b></td>
                 <td style={td}>{row.entite}</td>
                 <td style={td}>{isImport ? row.fournisseur : row.client}</td>
                 <td style={td}>{TRANSPORT_ICONS[row.typeTransport] || "📦"} {row.transporteur}</td>
@@ -681,6 +1077,18 @@ export default function App() {
   const [selectedImports, setSelectedImports] = useState([]);
   const [selectedExports, setSelectedExports] = useState([]);
   const [selectedHistory, setSelectedHistory] = useState([]);
+  const [masterData, setMasterData] = useState({
+    fournisseurs: FOURNISSEURS,
+    clients: CLIENTS,
+    transporteurs: TRANSPORTEURS,
+    entites: ENTITES,
+  });
+  const [masterDrafts, setMasterDrafts] = useState({
+    fournisseurs: FOURNISSEURS.join("\n"),
+    clients: CLIENTS.join("\n"),
+    transporteurs: TRANSPORTEURS.join("\n"),
+    entites: ENTITES.join("\n"),
+  });
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -702,6 +1110,33 @@ export default function App() {
     const unsubHistory = onSnapshot(collection(db, "history"), (snap) => setHistory(snap.docs.map((d) => ({ firebaseId: d.id, ...d.data() }))));
     return () => { unsubImports(); unsubExports(); unsubHistory(); };
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const defaults = {
+      fournisseurs: FOURNISSEURS,
+      clients: CLIENTS,
+      transporteurs: TRANSPORTEURS,
+      entites: ENTITES,
+    };
+    const keys = Object.keys(defaults);
+    const unsubs = keys.map((key) =>
+      onSnapshot(doc(db, "masterData", key), (snap) => {
+        const items = snap.exists() && Array.isArray(snap.data().items) ? snap.data().items : defaults[key];
+        setMasterData((prev) => ({ ...prev, [key]: items }));
+      })
+    );
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [user]);
+
+  useEffect(() => {
+    setMasterDrafts({
+      fournisseurs: (masterData.fournisseurs || []).join("\n"),
+      clients: (masterData.clients || []).join("\n"),
+      transporteurs: (masterData.transporteurs || []).join("\n"),
+      entites: (masterData.entites || []).join("\n"),
+    });
+  }, [masterData]);
 
   useEffect(() => {
     setSelectedImports((prev) => prev.filter((id) => imports.some((r) => r.id === id)));
@@ -884,6 +1319,46 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
     }
   };
 
+  const saveMasterDataList = async (key, label) => {
+    if (role !== "admin") return alert("Only admin can update master data.");
+    const raw = masterDrafts[key] || "";
+    const items = Array.from(new Set(
+      raw
+        .split("\n")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    ));
+
+    if (!items.length) {
+      alert(`La liste ${label} ne peut pas être vide.`);
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, "masterData", key), {
+        items,
+        updatedBy: user.email,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      await addHistory(user, "Master Data", "Settings", key, label, `${items.length} élément(s) enregistrés`, []);
+      alert(`${label} mis à jour avec succès.`);
+    } catch (error) {
+      console.error(error);
+      alert("Erreur pendant la mise à jour. Vérifie les règles Firestore.");
+    }
+  };
+
+  const resetMasterDraft = (key, fallback) => {
+    setMasterDrafts((prev) => ({ ...prev, [key]: (fallback || []).join("\n") }));
+  };
+
+  const masterSections = [
+    { key: "fournisseurs", label: "Fournisseurs", fallback: FOURNISSEURS, description: "Liste utilisée dans le formulaire Import." },
+    { key: "clients", label: "Clients", fallback: CLIENTS, description: "Liste utilisée dans le formulaire Export." },
+    { key: "transporteurs", label: "Transporteurs", fallback: TRANSPORTEURS, description: "Liste utilisée dans Import et Export." },
+    { key: "entites", label: "Entités", fallback: ENTITES, description: "Liste des entités internes." },
+  ];
+
   const createRoleDocHelp = (
     <div style={{ ...panelStyle, borderLeft: "4px solid #f59e0b" }}>
       <h3 style={{ marginTop: 0 }}>Role missing or viewer access</h3>
@@ -1021,6 +1496,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
     graphiques: ["Rapports", "Analyse visuelle des volumes, statuts et retards"],
     alertes: ["Alertes", "Retards, urgences et blocages douaniers"],
     historique: ["Audit Log", "Traçabilité des actions utilisateurs"],
+    settings: ["Master Data", "Gestion des listes déroulantes de l’application"],
   };
   const [pageTitle, pageSub] = pageTitles[activeTab] || pageTitles.dashboard;
 
@@ -1031,6 +1507,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
     ["graphiques", "▥", "Rapports"],
     ["alertes", "!", `Alertes (${visibleAlerts.length})`],
     ["historique", "☷", `Audit Log (${history.length})`],
+    ["settings", "⚙", "Master Data"],
   ];
 
   const navButton = (key, icon, label) => (
@@ -1404,10 +1881,78 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
               ))}
             </div>
           )}
+
+          {activeTab === "settings" && (
+            <div style={{ display: "grid", gap: 18 }}>
+              <div className="tm-panel">
+                <h3>⚙ Master Data Management</h3>
+                <p style={{ color: "#64748b", marginTop: 0 }}>
+                  Gérez ici les listes déroulantes sans modifier le code. Une valeur par ligne.
+                </p>
+                {role !== "admin" && (
+                  <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", color: "#c2410c", padding: 12, borderRadius: 12, marginBottom: 16, fontWeight: 800 }}>
+                    Seul l’admin peut modifier ces listes.
+                  </div>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: 16 }}>
+                  {masterSections.map((section) => {
+                    const count = (masterData[section.key] || []).length;
+                    return (
+                      <div key={section.key} style={{ border: "1px solid #e2e8f0", borderRadius: 18, padding: 16, background: "#fff" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
+                          <div>
+                            <h4 style={{ margin: 0, color: "#0f172a" }}>{section.label}</h4>
+                            <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>{section.description}</div>
+                          </div>
+                          <span style={{ background: "#e0f2fe", color: "#0369a1", padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 900 }}>
+                            {count} items
+                          </span>
+                        </div>
+                        <textarea
+                          value={masterDrafts[section.key] || ""}
+                          disabled={role !== "admin"}
+                          onChange={(e) => setMasterDrafts((prev) => ({ ...prev, [section.key]: e.target.value }))}
+                          style={{
+                            width: "100%",
+                            minHeight: 230,
+                            resize: "vertical",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 14,
+                            padding: 12,
+                            fontFamily: "Consolas, Monaco, monospace",
+                            fontSize: 12,
+                            outline: "none",
+                            background: role === "admin" ? "#f8fafc" : "#f1f5f9",
+                          }}
+                        />
+                        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 12, flexWrap: "wrap" }}>
+                          <button
+                            disabled={role !== "admin"}
+                            onClick={() => resetMasterDraft(section.key, masterData[section.key] || section.fallback)}
+                            style={{ ...secondaryBtn, opacity: role === "admin" ? 1 : 0.5 }}
+                          >
+                            ↺ Annuler
+                          </button>
+                          <button
+                            disabled={role !== "admin"}
+                            onClick={() => saveMasterDataList(section.key, section.label)}
+                            style={{ ...primaryBtn, background: role === "admin" ? "#1e3a5f" : "#94a3b8", cursor: role === "admin" ? "pointer" : "not-allowed" }}
+                          >
+                            💾 Enregistrer
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
         </section>
       </main>
 
-      {modal && <Modal mode={modal.mode} type={modal.type} record={modal.record} onClose={() => setModal(null)} onSave={saveShipment} />}
+      {modal && <Modal mode={modal.mode} type={modal.type} record={modal.record} masterData={masterData} onClose={() => setModal(null)} onSave={saveShipment} />}
       </div>
     </div>
   );
