@@ -35,6 +35,7 @@ import {
 } from "firebase/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 // ─── Firebase ────────────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -59,9 +60,10 @@ const TRANSPORTS = ["AERIEN", "Routier", "Maritime", "Express"];
 const PRIORITES = ["Normale", "Haute", "Urgente"];
 const DOUANE = ["N/A", "En cours", "Dédouané", "Bloqué douane"];
 const ENTITES = ["FIGEAC AERO", "Casablanca Aéronautique", "Autre"];
+const uniqueList = (items) => Array.from(new Set(items.map((x) => String(x).trim()).filter(Boolean)));
 
 // Change these lists any time you want.
-const FOURNISSEURS = ["AUVERGNE AERONAUTIQUE",
+const FOURNISSEURS = uniqueList(["AUVERGNE AERONAUTIQUE",
 "FARO EUROPE GMBH & CO. KG",
 "PPG AEROSPACE",
 "ACCEL",
@@ -433,8 +435,8 @@ const FOURNISSEURS = ["AUVERGNE AERONAUTIQUE",
 "KENNAMETAL FRANCE SAS",
 "PRECISE FRANCE",
 "STAR PROGETTI",
-"AAF FRANCE SAS",];
-const CLIENTS = ["ABIPA",
+"AAF FRANCE SAS",]);
+const CLIENTS = uniqueList(["ABIPA",
 "AirBus Blondel",
 "AirBus MERIGNAC",
 "AirBus MONTOIR",
@@ -457,7 +459,7 @@ const CLIENTS = ["ABIPA",
 "Safran  Cramayel",
 "Safran  EVERY",
 "SN Auvergne",
-];
+]);
 
 const APPROVISIONNEURS = ["Yassmin El Fathani", "Fatiha ET-TAGRY", "Ahmed Benzari", "Autre"];
 const CHARGES_AFFAIRE = ["Ahmed Benzari", "Karim El Amrani", "Sara Alaoui", "Autre"];
@@ -480,12 +482,18 @@ const CHART_PALETTE = ["#1e3a5f", "#16a34a", "#b45309", "#b91c1c", "#475569", "#
 const TRANSPORT_ICONS = { AERIEN: "✈", Routier: "🚚", Maritime: "🚢", Express: "⚡" };
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
+function localDateString(date = new Date()) {
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return offsetDate.toISOString().slice(0, 10);
+}
+
 function now() {
-  return new Date().toISOString().slice(0, 16).replace("T", " ");
+  const d = new Date();
+  return `${localDateString(d)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateString();
 }
 
 function calculateDatePrevue(dateExpedition, typeTransport) {
@@ -493,7 +501,7 @@ function calculateDatePrevue(dateExpedition, typeTransport) {
   const daysByTransport = { AERIEN: 3, Express: 1, Routier: 7, Maritime: 30 };
   const d = new Date(`${dateExpedition}T00:00:00`);
   d.setDate(d.getDate() + (daysByTransport[typeTransport] ?? 0));
-  return d.toISOString().slice(0, 10);
+  return localDateString(d);
 }
 
 function calculateRetard(datePrevue, dateLivraison) {
@@ -505,15 +513,13 @@ function calculateRetard(datePrevue, dateLivraison) {
 
 function makeId(type) {
   const prefix = type === "import" ? "IMP" : "EXP";
-  const stamp = Date.now().toString().slice(-6);
-  return `${prefix}-${stamp}`;
+  const stamp = Date.now();
+  const random = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `${prefix}-${stamp}-${random}`;
 }
 
 function canModify(role, type) {
-  if (role === "admin") return true;
-  if (role === "import" && type === "import") return true;
-  if (role === "export" && type === "export") return true;
-  return false;
+  return role === "admin" || role === type;
 }
 
 function normalizeStatus(status) {
@@ -688,8 +694,193 @@ function generatePdfReport({ imports, exports, user, reportType = "all" }) {
     docPdf.text(`Page ${i}/${pageCount}`, 270, 202);
   }
 
-  const safeDate = new Date().toISOString().slice(0, 10);
+  const safeDate = localDateString();
   docPdf.save(`transport-manager-${reportType}-${safeDate}.pdf`);
+}
+
+
+function buildExcelRows(rows, direction) {
+  return rows.map((r) => ({
+    Direction: direction,
+    ID: r.id || "",
+    "Date demande d'enlèvement": formatDateForReport(r.dateDemande),
+    Entité: r.entite || "",
+    "Fournisseur/Client": direction === "Import" ? (r.fournisseur || "") : (r.client || ""),
+    Approvisionneur: r.approvisionneur || "",
+    "Chargé d'affaire": r.chargeAffaire || "",
+    "Type transport": r.typeTransport || "",
+    Transporteur: r.transporteur || "",
+    Tracking: r.tracking || "",
+    "Date enlèvement": formatDateForReport(r.dateEnlevement),
+    "Date expédition": formatDateForReport(r.dateExpedition),
+    "Date prévue": formatDateForReport(r.datePrevue),
+    "Date livraison": formatDateForReport(r.dateLivraison),
+    "Retard (jours)": Number(r.retard || 0),
+    Statut: normalizeStatus(r.statut),
+    Priorité: r.priorite || "",
+    Douane: r.statutDouane || "",
+    Marchandise: r.typeMarchandise || "",
+    Observations: r.observations || "",
+  }));
+}
+
+function excelColumnName(index) {
+  let name = "";
+  let n = index + 1;
+  while (n > 0) {
+    const r = (n - 1) % 26;
+    name = String.fromCharCode(65 + r) + name;
+    n = Math.floor((n - 1) / 26);
+  }
+  return name;
+}
+
+function applyExcelLayout(ws, headerRowIndex, rowCount, colCount) {
+  const lastCol = excelColumnName(Math.max(colCount - 1, 0));
+  const headerRow = headerRowIndex + 1;
+  const lastRow = headerRow + Math.max(rowCount, 1);
+
+  ws["!cols"] = Array.from({ length: colCount }, (_, index) => {
+    const defaultWidths = [12, 16, 24, 22, 32, 24, 24, 18, 22, 22, 18, 18, 18, 18, 14, 18, 16, 18, 22, 35];
+    return { wch: defaultWidths[index] || 18 };
+  });
+
+  ws["!autofilter"] = { ref: `A${headerRow}:${lastCol}${lastRow}` };
+  ws["!freeze"] = { xSplit: 0, ySplit: headerRow, topLeftCell: `A${headerRow + 1}`, activePane: "bottomLeft", state: "frozen" };
+}
+
+function createProfessionalDataSheet({ rows, title, subtitle, emptyMessage }) {
+  const headers = rows.length ? Object.keys(rows[0]) : ["Message"];
+  const colCount = headers.length;
+  const generatedAt = new Date().toLocaleString("fr-FR");
+
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["FIGEAC AERO"],
+    [title],
+    [`${subtitle} · Généré le ${generatedAt}`],
+    [],
+  ]);
+
+  if (rows.length) {
+    XLSX.utils.sheet_add_json(ws, rows, { origin: "A5" });
+    applyExcelLayout(ws, 4, rows.length, colCount);
+  } else {
+    XLSX.utils.sheet_add_aoa(ws, [[emptyMessage]], { origin: "A5" });
+    applyExcelLayout(ws, 4, 1, 1);
+  }
+
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(colCount - 1, 0) } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: Math.max(colCount - 1, 0) } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: Math.max(colCount - 1, 0) } },
+  ];
+
+  return ws;
+}
+
+function countBy(rows, getter, limit = 5) {
+  const counts = {};
+  rows.forEach((row) => {
+    const key = getter(row);
+    if (!key || key === "Autre") return;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name, value]) => [name, value]);
+}
+
+function createSummarySheet({ imports, exports }) {
+  const all = [...imports, ...exports];
+  const delivered = all.filter((r) => normalizeStatus(r.statut) === "Livré" || r.dateLivraison);
+  const delayed = all.filter((r) => Number(r.retard || 0) > 0);
+  const onTimeDelivered = delivered.filter((r) => Number(r.retard || 0) <= 0).length;
+  const onTimeRate = delivered.length ? Math.round((onTimeDelivered / delivered.length) * 100) : 0;
+  const avgDelay = all.length
+    ? (all.reduce((sum, r) => sum + Math.max(Number(r.retard || 0), 0), 0) / all.length).toFixed(1)
+    : 0;
+
+  const summaryRows = [
+    ["FIGEAC AERO"],
+    ["Résumé Excel Transport Management System"],
+    [`Généré le ${new Date().toLocaleString("fr-FR")}`],
+    [],
+    ["Indicateur", "Valeur"],
+    ["Total opérations", all.length],
+    ["Imports", imports.length],
+    ["Exports", exports.length],
+    ["Livrés", delivered.length],
+    ["Retards", delayed.length],
+    ["Taux de livraison à temps", `${onTimeRate}%`],
+    ["Retard moyen", `${avgDelay} jour(s)`],
+    ["Urgents", all.filter((r) => r.priorite === "Urgente").length],
+    ["Bloqués douane", all.filter((r) => r.statutDouane === "Bloqué douane").length],
+    [],
+    ["Top Transporteurs", "Nombre"],
+    ...countBy(all, (r) => r.transporteur),
+    [],
+    ["Top Fournisseurs", "Nombre"],
+    ...countBy(imports, (r) => r.fournisseur),
+    [],
+    ["Top Clients", "Nombre"],
+    ...countBy(exports, (r) => r.client),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(summaryRows);
+  ws["!cols"] = [{ wch: 36 }, { wch: 18 }];
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+  ];
+  return ws;
+}
+
+function exportToExcel({ imports = [], exports = [], type = "all" }) {
+  const wb = XLSX.utils.book_new();
+  const safeDate = localDateString();
+
+  const importRows = buildExcelRows(imports, "Import");
+  const exportRows = buildExcelRows(exports, "Export");
+
+  if (type === "all") {
+    XLSX.utils.book_append_sheet(wb, createSummarySheet({ imports, exports }), "Résumé");
+  }
+
+  if (type === "all" || type === "imports") {
+    XLSX.utils.book_append_sheet(
+      wb,
+      createProfessionalDataSheet({
+        rows: importRows,
+        title: "Rapport des Imports",
+        subtitle: `${importRows.length} import(s)`,
+        emptyMessage: "Aucune donnée import",
+      }),
+      "Imports"
+    );
+  }
+
+  if (type === "all" || type === "exports") {
+    XLSX.utils.book_append_sheet(
+      wb,
+      createProfessionalDataSheet({
+        rows: exportRows,
+        title: "Rapport des Exports",
+        subtitle: `${exportRows.length} export(s)`,
+        emptyMessage: "Aucune donnée export",
+      }),
+      "Exports"
+    );
+  }
+
+  const nameByType = {
+    all: `FIGEAC-AERO-rapport-global-${safeDate}.xlsx`,
+    imports: `FIGEAC-AERO-rapport-imports-${safeDate}.xlsx`,
+    exports: `FIGEAC-AERO-rapport-exports-${safeDate}.xlsx`,
+  };
+
+  XLSX.writeFile(wb, nameByType[type] || nameByType.all);
 }
 
 // ─── UI Components ───────────────────────────────────────────────────────────
@@ -824,12 +1015,12 @@ function Modal({ mode, type, record, onClose, onSave, masterData }) {
   const entitesList = masterData?.entites?.length ? masterData.entites : ENTITES;
   const [form, setForm] = useState(record || {
     entite: entitesList[0] || "FIGEAC AERO",
-    fournisseur: fournisseursList[0] || "Autre",
+    fournisseur: fournisseursList[0] || "",
     approvisionneur: APPROVISIONNEURS[0],
-    client: clientsList[0] || "Autre",
+    client: clientsList[0] || "",
     chargeAffaire: CHARGES_AFFAIRE[0],
     typeTransport: "Routier",
-    transporteur: transporteursList[0] || "Autre",
+    transporteur: transporteursList[0] || "",
     tracking: "",
     dateDemande: today(),
     dateEnlevement: "",
@@ -965,7 +1156,7 @@ function ShipmentTable({ rows, type, role, onEdit, onDelete, selectedIds = [], o
                     title="Select this shipment"
                   />
                 </td>
-                <td style={td}><b>{row.dateDemande || "—"}</b></td>
+                <td style={td}><b>{formatDateForReport(row.dateDemande)}</b></td>
                 <td style={td}>{row.entite}</td>
                 <td style={td}>{isImport ? row.fournisseur : row.client}</td>
                 <td style={td}>{TRANSPORT_ICONS[row.typeTransport] || "📦"} {row.transporteur}</td>
@@ -1074,6 +1265,13 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [filterStatut, setFilterStatut] = useState("Tous");
   const [filterTransport, setFilterTransport] = useState("Tous");
+  const [filterFournisseur, setFilterFournisseur] = useState("Tous");
+  const [filterClient, setFilterClient] = useState("Tous");
+  const [filterTransporteur, setFilterTransporteur] = useState("Tous");
+  const [filterPriorite, setFilterPriorite] = useState("Tous");
+  const [filterDouane, setFilterDouane] = useState("Tous");
+  const [filterDateDebut, setFilterDateDebut] = useState("");
+  const [filterDateFin, setFilterDateFin] = useState("");
   const [selectedImports, setSelectedImports] = useState([]);
   const [selectedExports, setSelectedExports] = useState([]);
   const [selectedHistory, setSelectedHistory] = useState([]);
@@ -1119,8 +1317,7 @@ export default function App() {
       transporteurs: TRANSPORTEURS,
       entites: ENTITES,
     };
-    const keys = Object.keys(defaults);
-    const unsubs = keys.map((key) =>
+    const unsubs = Object.keys(defaults).map((key) =>
       onSnapshot(doc(db, "masterData", key), (snap) => {
         const items = snap.exists() && Array.isArray(snap.data().items) ? snap.data().items : defaults[key];
         setMasterData((prev) => ({ ...prev, [key]: items }));
@@ -1165,8 +1362,20 @@ export default function App() {
 
   const filterRows = (rows) => rows.filter((r) => {
     const q = search.toLowerCase().trim();
-    const text = [r.id, r.entite, r.fournisseur, r.client, r.transporteur, r.tracking, r.typeMarchandise].join(" ").toLowerCase();
-    return (!q || text.includes(q)) && (filterStatut === "Tous" || r.statut === filterStatut) && (filterTransport === "Tous" || r.typeTransport === filterTransport);
+    const text = [r.id, r.entite, r.fournisseur, r.client, r.transporteur, r.tracking, r.typeMarchandise, r.observations].join(" ").toLowerCase();
+    const demandDate = r.dateDemande || r.dateExpedition || "";
+    return (
+      (!q || text.includes(q)) &&
+      (filterStatut === "Tous" || normalizeStatus(r.statut) === filterStatut || r.statut === filterStatut) &&
+      (filterTransport === "Tous" || r.typeTransport === filterTransport) &&
+      (filterFournisseur === "Tous" || r.fournisseur === filterFournisseur) &&
+      (filterClient === "Tous" || r.client === filterClient) &&
+      (filterTransporteur === "Tous" || r.transporteur === filterTransporteur) &&
+      (filterPriorite === "Tous" || r.priorite === filterPriorite) &&
+      (filterDouane === "Tous" || r.statutDouane === filterDouane) &&
+      (!filterDateDebut || demandDate >= filterDateDebut) &&
+      (!filterDateFin || demandDate <= filterDateFin)
+    );
   });
 
   const saveShipment = async (form) => {
@@ -1214,12 +1423,13 @@ export default function App() {
     const collectionName = type === "import" ? "imports" : "exports";
     const rows = type === "import" ? imports : exports;
     const deleted = rows.find((r) => r.id === id || r.firebaseId === id) || {};
-    await deleteDoc(doc(db, collectionName, id));
+    const docId = deleted.firebaseId || deleted.id || id;
+    await deleteDoc(doc(db, collectionName, docId));
     await addHistory(
       user,
       "Suppression",
       type === "import" ? "Import" : "Export",
-      id,
+      docId,
       `${deleted.entite || ""} · ${deleted.fournisseur || deleted.client || ""}`,
       `Shipment supprimé · Tracking: ${deleted.tracking || "N/A"}`,
       getChanges(deleted, {})
@@ -1322,12 +1532,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
   const saveMasterDataList = async (key, label) => {
     if (role !== "admin") return alert("Only admin can update master data.");
     const raw = masterDrafts[key] || "";
-    const items = Array.from(new Set(
-      raw
-        .split("\n")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    ));
+    const items = uniqueList(raw.split("\n"));
 
     if (!items.length) {
       alert(`La liste ${label} ne peut pas être vide.`);
@@ -1340,7 +1545,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
         updatedBy: user.email,
         updatedAt: serverTimestamp(),
       }, { merge: true });
-      await addHistory(user, "Master Data", "Settings", key, label, `${items.length} élément(s) enregistrés`, []);
+      await addHistory(user, "Master Data", "Settings", key, label, `${items.length} élément(s) enregistré(s)`, []);
       alert(`${label} mis à jour avec succès.`);
     } catch (error) {
       console.error(error);
@@ -1374,16 +1579,38 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
   if (authLoading) return <div style={centerPage}>Loading...</div>;
   if (!user) return <LoginScreen />;
 
+  const fournisseursList = masterData?.fournisseurs?.length ? masterData.fournisseurs : FOURNISSEURS;
+  const clientsList = masterData?.clients?.length ? masterData.clients : CLIENTS;
+  const transporteursList = masterData?.transporteurs?.length ? masterData.transporteurs : TRANSPORTEURS;
+  const entitesList = masterData?.entites?.length ? masterData.entites : ENTITES;
+
+  const filterControl = (label, control) => (
+    <div className="tm-filter-group">
+      <label>{label}</label>
+      {control}
+    </div>
+  );
+
   const tabStyle = (t) => ({
     padding: "10px 18px", border: "none", background: activeTab === t ? "linear-gradient(135deg,#ffffff,#f0f9ff)" : "transparent", fontWeight: activeTab === t ? 900 : 700, color: activeTab === t ? "#0f172a" : "#64748b", cursor: "pointer", borderRadius: 999, fontSize: 13, border: activeTab === t ? "1px solid #c7d2fe" : "1px solid transparent", boxShadow: activeTab === t ? "0 8px 20px rgba(99,102,241,.16)" : "none", whiteSpace: "nowrap"
   });
 
   const filterBar = (
-    <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-      <input placeholder="🔍 Rechercher…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...inputStyle, minWidth: 220 }} />
-      <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} style={inputStyle}><option>Tous</option>{STATUTS.map((s) => <option key={s}>{s}</option>)}</select>
-      <select value={filterTransport} onChange={(e) => setFilterTransport(e.target.value)} style={inputStyle}><option>Tous</option>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select>
-      <button onClick={() => { setSearch(""); setFilterStatut("Tous"); setFilterTransport("Tous"); }} style={secondaryBtn}>↺ Reset</button>
+    <div className="tm-filter-grid">
+      {filterControl("🔍 Recherche", <input placeholder="Rechercher tracking, fournisseur, client…" value={search} onChange={(e) => setSearch(e.target.value)} style={inputStyle} />)}
+      {filterControl("📦 Statut", <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} style={inputStyle}><option>Tous</option>{STATUTS.map((s) => <option key={s}>{s}</option>)}</select>)}
+      {filterControl("🚚 Transport", <select value={filterTransport} onChange={(e) => setFilterTransport(e.target.value)} style={inputStyle}><option>Tous</option>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select>)}
+      {filterControl("🏭 Fournisseur", <select value={filterFournisseur} onChange={(e) => setFilterFournisseur(e.target.value)} style={inputStyle}><option>Tous</option>{fournisseursList.map((f) => <option key={f}>{f}</option>)}</select>)}
+      {filterControl("🏢 Client", <select value={filterClient} onChange={(e) => setFilterClient(e.target.value)} style={inputStyle}><option>Tous</option>{clientsList.map((c) => <option key={c}>{c}</option>)}</select>)}
+      {filterControl("🚛 Transporteur", <select value={filterTransporteur} onChange={(e) => setFilterTransporteur(e.target.value)} style={inputStyle}><option>Tous</option>{transporteursList.map((t) => <option key={t}>{t}</option>)}</select>)}
+      {filterControl("⚡ Priorité", <select value={filterPriorite} onChange={(e) => setFilterPriorite(e.target.value)} style={inputStyle}><option>Tous</option>{PRIORITES.map((p) => <option key={p}>{p}</option>)}</select>)}
+      {filterControl("🛃 Douane", <select value={filterDouane} onChange={(e) => setFilterDouane(e.target.value)} style={inputStyle}><option>Tous</option>{DOUANE.map((d) => <option key={d}>{d}</option>)}</select>)}
+      {filterControl("📅 Date début", <input type="date" value={filterDateDebut} onChange={(e) => setFilterDateDebut(e.target.value)} style={inputStyle} />)}
+      {filterControl("📅 Date fin", <input type="date" value={filterDateFin} onChange={(e) => setFilterDateFin(e.target.value)} style={inputStyle} />)}
+      <div className="tm-filter-group tm-filter-reset">
+        <label>&nbsp;</label>
+        <button onClick={() => { setSearch(""); setFilterStatut("Tous"); setFilterTransport("Tous"); setFilterFournisseur("Tous"); setFilterClient("Tous"); setFilterTransporteur("Tous"); setFilterPriorite("Tous"); setFilterDouane("Tous"); setFilterDateDebut(""); setFilterDateFin(""); }} style={secondaryBtn}>↺ Reset</button>
+      </div>
     </div>
   );
 
@@ -1399,6 +1626,9 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
         <button onClick={() => generatePdfReport({ imports: isImport ? filteredRows : [], exports: isImport ? [] : filteredRows, user, reportType: isImport ? "imports" : "exports" })} style={{ ...primaryBtn, background: isImport ? "#1e3a5f" : "#b45309" }}>
           📄 Exporter {isImport ? "Imports" : "Exports"} PDF
+        </button>
+        <button onClick={() => exportToExcel({ imports: isImport ? filteredRows : [], exports: isImport ? [] : filteredRows, type: isImport ? "imports" : "exports" })} style={secondaryBtn}>
+          📊 Exporter Excel
         </button>
         {allowed && (
           <>
@@ -1615,7 +1845,12 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
         .tm-list-title { font-weight:900; font-size:13px; }
         .tm-list-sub { color:#64748b; font-size:12px; margin-top:2px; }
         .tm-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
-        .tm-filter-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 10px 28px rgba(15,23,42,.05); margin-bottom:16px; }
+        .tm-filter-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 10px 28px rgba(15,23,42,.05); margin-bottom:16px; }
+        .tm-filter-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; align-items:end; }
+        .tm-filter-group { display:flex; flex-direction:column; gap:7px; min-width:0; }
+        .tm-filter-group label { font-size:11px; font-weight:950; color:#64748b; text-transform:uppercase; letter-spacing:.55px; }
+        .tm-filter-group input, .tm-filter-group select { width:100%; }
+        .tm-filter-reset button { width:100%; min-height:39px; }
         .tm-advanced-kpis { display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:14px; margin-bottom:18px; }
         .tm-advanced-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 10px 28px rgba(15,23,42,.06); }
         .tm-advanced-card .label { font-size:12px; color:#64748b; font-weight:900; text-transform:uppercase; letter-spacing:.7px; }
@@ -1672,6 +1907,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
                 </div>
                 <div className="tm-actions">
                   <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "all" })} className="tm-btn white">📄 PDF Global</button>
+                  <button onClick={() => exportToExcel({ imports, exports, type: "all" })} className="tm-btn white">📊 Excel Global</button>
                   <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "delayed" })} className="tm-btn red">⚠ PDF Retards</button>
                   <button disabled={!canModify(role, "import")} onClick={() => setModal({ mode: "add", type: "import" })} className="tm-btn navy">＋ Import</button>
                   <button disabled={!canModify(role, "export")} onClick={() => setModal({ mode: "add", type: "export" })} className="tm-btn orange">＋ Export</button>
@@ -1786,6 +2022,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
                 <div><h2 style={{ margin: 0 }}>Importations</h2><div style={{ color: "#64748b", fontSize: 13 }}>Gestion des shipments import</div></div>
                 <div className="tm-actions">
                   <button onClick={() => generatePdfReport({ imports: filteredImports, exports: [], user, reportType: "imports" })} className="tm-btn white">📄 Exporter PDF</button>
+                  <button onClick={() => exportToExcel({ imports: filteredImports, exports: [], type: "imports" })} className="tm-btn white">📊 Exporter Excel</button>
                   <button disabled={!canModify(role, "import")} onClick={() => setModal({ mode: "add", type: "import" })} className="tm-btn navy">＋ Nouvelle Importation</button>
                 </div>
               </div>
@@ -1801,6 +2038,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
                 <div><h2 style={{ margin: 0 }}>Exportations</h2><div style={{ color: "#64748b", fontSize: 13 }}>Gestion des shipments export</div></div>
                 <div className="tm-actions">
                   <button onClick={() => generatePdfReport({ imports: [], exports: filteredExports, user, reportType: "exports" })} className="tm-btn white">📄 Exporter PDF</button>
+                  <button onClick={() => exportToExcel({ imports: [], exports: filteredExports, type: "exports" })} className="tm-btn white">📊 Exporter Excel</button>
                   <button disabled={!canModify(role, "export")} onClick={() => setModal({ mode: "add", type: "export" })} className="tm-btn orange">＋ Nouvelle Exportation</button>
                 </div>
               </div>
@@ -1816,6 +2054,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
                 <div><h2 style={{ margin: 0 }}>Rapports & Analyse</h2><div style={{ color: "#64748b", fontSize: 13 }}>Indicateurs opérationnels et export PDF</div></div>
                 <div className="tm-actions">
                   <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "all" })} className="tm-btn white">📄 PDF Global</button>
+                  <button onClick={() => exportToExcel({ imports, exports, type: "all" })} className="tm-btn white">📊 Excel Global</button>
                   <button onClick={() => generatePdfReport({ imports, exports, user, reportType: "delayed" })} className="tm-btn red">⚠ PDF Retards</button>
                 </div>
               </div>
@@ -1881,6 +2120,7 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
               ))}
             </div>
           )}
+
 
           {activeTab === "settings" && (
             <div style={{ display: "grid", gap: 18 }}>
@@ -1948,7 +2188,6 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
               </div>
             </div>
           )}
-
         </section>
       </main>
 
