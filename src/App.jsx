@@ -1013,12 +1013,14 @@ function Modal({ mode, type, record, onClose, onSave, masterData }) {
   const clientsList = masterData?.clients?.length ? masterData.clients : CLIENTS;
   const transporteursList = masterData?.transporteurs?.length ? masterData.transporteurs : TRANSPORTEURS;
   const entitesList = masterData?.entites?.length ? masterData.entites : ENTITES;
+  const approvisionneursList = masterData?.approvisionneurs?.length ? masterData.approvisionneurs : APPROVISIONNEURS;
+  const chargesAffaireList = masterData?.chargesAffaire?.length ? masterData.chargesAffaire : CHARGES_AFFAIRE;
   const [form, setForm] = useState(record || {
     entite: entitesList[0] || "FIGEAC AERO",
     fournisseur: fournisseursList[0] || "",
-    approvisionneur: APPROVISIONNEURS[0],
+    approvisionneur: approvisionneursList[0] || "",
     client: clientsList[0] || "",
-    chargeAffaire: CHARGES_AFFAIRE[0],
+    chargeAffaire: chargesAffaireList[0] || "",
     typeTransport: "Routier",
     transporteur: transporteursList[0] || "",
     tracking: "",
@@ -1085,7 +1087,7 @@ function Modal({ mode, type, record, onClose, onSave, masterData }) {
 
         <div style={{ padding: 28, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           {field("Entité", "entite", "text", entitesList)}
-          {isImport ? <>{field("Fournisseur", "fournisseur", "text", fournisseursList)}{field("Approvisionneur", "approvisionneur", "text", APPROVISIONNEURS)}</> : <>{field("Client", "client", "text", clientsList)}{field("Chargé d'affaire", "chargeAffaire", "text", CHARGES_AFFAIRE)}</>}
+          {isImport ? <>{field("Fournisseur", "fournisseur", "text", fournisseursList)}{field("Approvisionneur", "approvisionneur", "text", approvisionneursList)}</> : <>{field("Client", "client", "text", clientsList)}{field("Chargé d'affaire", "chargeAffaire", "text", chargesAffaireList)}</>}
           {field("Type de transport", "typeTransport", "text", TRANSPORTS)}
           {field("Transporteur", "transporteur", "text", transporteursList)}
           {field("N° Tracking", "tracking")}
@@ -1280,12 +1282,16 @@ export default function App() {
     clients: CLIENTS,
     transporteurs: TRANSPORTEURS,
     entites: ENTITES,
+    approvisionneurs: APPROVISIONNEURS,
+    chargesAffaire: CHARGES_AFFAIRE,
   });
   const [masterDrafts, setMasterDrafts] = useState({
     fournisseurs: FOURNISSEURS.join("\n"),
     clients: CLIENTS.join("\n"),
     transporteurs: TRANSPORTEURS.join("\n"),
     entites: ENTITES.join("\n"),
+    approvisionneurs: APPROVISIONNEURS.join("\n"),
+    chargesAffaire: CHARGES_AFFAIRE.join("\n"),
   });
 
   useEffect(() => {
@@ -1316,6 +1322,8 @@ export default function App() {
       clients: CLIENTS,
       transporteurs: TRANSPORTEURS,
       entites: ENTITES,
+      approvisionneurs: APPROVISIONNEURS,
+      chargesAffaire: CHARGES_AFFAIRE,
     };
     const unsubs = Object.keys(defaults).map((key) =>
       onSnapshot(doc(db, "masterData", key), (snap) => {
@@ -1332,6 +1340,8 @@ export default function App() {
       clients: (masterData.clients || []).join("\n"),
       transporteurs: (masterData.transporteurs || []).join("\n"),
       entites: (masterData.entites || []).join("\n"),
+      approvisionneurs: (masterData.approvisionneurs || []).join("\n"),
+      chargesAffaire: (masterData.chargesAffaire || []).join("\n"),
     });
   }, [masterData]);
 
@@ -1562,6 +1572,8 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
     { key: "clients", label: "Clients", fallback: CLIENTS, description: "Liste utilisée dans le formulaire Export." },
     { key: "transporteurs", label: "Transporteurs", fallback: TRANSPORTEURS, description: "Liste utilisée dans Import et Export." },
     { key: "entites", label: "Entités", fallback: ENTITES, description: "Liste des entités internes." },
+    { key: "approvisionneurs", label: "Approvisionneurs", fallback: APPROVISIONNEURS, description: "Liste utilisée dans le formulaire Import." },
+    { key: "chargesAffaire", label: "Chargés d'affaire", fallback: CHARGES_AFFAIRE, description: "Liste utilisée dans le formulaire Export." },
   ];
 
   const createRoleDocHelp = (
@@ -1583,6 +1595,8 @@ This will permanently delete ${rowsToDelete.length} ${direction.toLowerCase()} s
   const clientsList = masterData?.clients?.length ? masterData.clients : CLIENTS;
   const transporteursList = masterData?.transporteurs?.length ? masterData.transporteurs : TRANSPORTEURS;
   const entitesList = masterData?.entites?.length ? masterData.entites : ENTITES;
+  const approvisionneursList = masterData?.approvisionneurs?.length ? masterData.approvisionneurs : APPROVISIONNEURS;
+  const chargesAffaireList = masterData?.chargesAffaire?.length ? masterData.chargesAffaire : CHARGES_AFFAIRE;
 
   const filterControl = (label, control) => (
     <div className="tm-filter-group">
